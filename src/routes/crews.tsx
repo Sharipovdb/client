@@ -16,13 +16,7 @@ import { z } from 'zod'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardDescription,
-  CardEyebrow,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardEyebrow, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { CrewMembershipDialog } from '@/features/crews/crew-membership-dialog'
@@ -241,7 +235,9 @@ function CrewsPage() {
 
     const route = routes.find((candidate) => candidate.id === crew.routeId)
 
-    return route ? `${route.name} · ${formatKm(route.distanceKm)} each way` : 'Unknown route'
+    return route
+      ? `${route.name} · ${formatKm(route.distanceKm)} each way`
+      : 'Unknown route'
   }
 
   function employeeName(employeeId: number | null) {
@@ -263,12 +259,6 @@ function CrewsPage() {
               <CardTitle className="mt-2">
                 {editingCrew ? 'Edit Crew' : 'Add Crew'}
               </CardTitle>
-              <CardDescription className="mt-2">
-                A crew has a name, a lead — either a Driver-Lead or a Crew-Lead
-                — and a route, which sets what a day travelled by car is worth.
-                A crew on a tariff is paid a flat amount per trip instead and
-                needs no route. The lead is who the crew's month is paid to.
-              </CardDescription>
             </div>
 
             <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
@@ -404,11 +394,6 @@ function CrewsPage() {
                 step="1"
                 {...register('seatCapacity')}
               />
-              {leadType === 'driverLead' && (
-                <p className="text-xs text-slate-400">
-                  Defaults from the driver's vehicle — still editable.
-                </p>
-              )}
             </Field>
 
             {formError && (

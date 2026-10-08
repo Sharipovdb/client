@@ -181,10 +181,6 @@ function VehiclesPage() {
               <CardTitle className="mt-2">
                 {editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}
               </CardTitle>
-              <CardDescription className="mt-2">
-                Every Driver-Lead needs exactly one vehicle with a seat count
-                and amortization basis.
-              </CardDescription>
             </div>
 
             <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
@@ -300,9 +296,7 @@ function VehiclesPage() {
                 <p className="mt-1 text-sm text-amber-700">
                   {driverLeadsWithoutVehicle
                     .map((employee) => employee.fullname)
-                    .join(', ')}{' '}
-                  cannot be assigned as a crew Driver-Lead until a vehicle is
-                  added.
+                    .join(', ')}
                 </p>
               </div>
             </div>

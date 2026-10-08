@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { createFileRoute } from '@tanstack/react-router'
 import { PencilLine, Plus, Route as RouteIcon, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import type { UseFormRegisterReturn } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -11,6 +11,7 @@ import type { Period } from '@/components/month-picker'
 import { MonthPicker } from '@/components/month-picker'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Card,
   CardDescription,
@@ -29,26 +30,22 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useAuth } from '@/features/auth/auth-context'
 import { useCrewMemberships } from '@/features/crews/crew-memberships-context'
 import { useCrews } from '@/features/crews/crews-context'
 import { useEmployees } from '@/features/employees/employees-context'
-import type { TransportDayDraft } from '@/features/transport-days/transport-days-context'
+import type { TransportDayChanges } from '@/features/transport-days/transport-days-context'
 import { useTransportDays } from '@/features/transport-days/transport-days-context'
 import { getErrorMessage } from '@/lib/api-error'
 import {
+  isCrewLedBy,
   isDayOpen,
   isSameId,
   legLabels,
-  taxiExpenseStatusLabels,
   transportModeLabels,
   transportModes,
 } from '@/lib/domain-types'
-import type {
-  Leg,
-  TaxiExpenseStatus,
-  TaxiFareDraft,
-  TransportMode,
-} from '@/lib/domain-types'
+import type { Leg, TaxiFareDraft, TransportMode } from '@/lib/domain-types'
 import {
   formatCurrency,
   formatDayLabel,
@@ -87,6 +84,8 @@ const dayFormSchema = z
   .object({
     crewId: z.string().min(1, 'Select a crew.'),
     date: z.string().min(1, 'Select a date.'),
+    dateTo: z.string(),
+    skipWeekends: z.boolean(),
     morningMode: z.enum(transportModes),
     afternoonMode: z.enum(transportModes),
     extraBusinessKm: z.coerce
@@ -97,6 +96,14 @@ const dayFormSchema = z
     afternoonTaxi: taxiFareSchema,
   })
   .superRefine((values, context) => {
+    if (values.dateTo && values.dateTo < values.date) {
+      context.addIssue({
+        code: 'custom',
+        path: ['dateTo'],
+        message: 'The end date must not be before the start date.',
+      })
+    }
+
     for (const leg of legFields) {
       if (values[leg.mode] !== 'Taxi') {
         continue
@@ -127,10 +134,12 @@ function todayIsoDate() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function defaultValues(): DayFormInput {
+function defaultValues(crewId = ''): DayFormInput {
   return {
-    crewId: '',
+    crewId,
     date: todayIsoDate(),
+    dateTo: '',
+    skipWeekends: true,
     morningMode: 'Driven',
     afternoonMode: 'Driven',
     extraBusinessKm: 0,
@@ -140,9 +149,11 @@ function defaultValues(): DayFormInput {
   }
 }
 
-function toDraft(
-  values: DayFormValues,
-): Omit<TransportDayDraft, 'crewId' | 'date'> {
+function isRange(date: string, dateTo: string) {
+  return dateTo !== '' && dateTo !== date
+}
+
+function toChanges(values: DayFormValues): TransportDayChanges {
   const taxiFares: TaxiFareDraft[] = legFields
     .filter((leg) => values[leg.mode] === 'Taxi')
     .map((leg) => ({
@@ -169,18 +180,8 @@ const modeBadgeVariant: Record<
   None: 'secondary',
 }
 
-// A fare is only money once it is approved, so the log says where each one stands.
-const fareBadgeVariant: Record<
-  TaxiExpenseStatus,
-  'success' | 'warning' | 'destructive' | 'secondary'
-> = {
-  Pending: 'warning',
-  Approved: 'success',
-  Rejected: 'destructive',
-  Paid: 'secondary',
-}
-
 function TransportDaysPage() {
+  const { session } = useAuth()
   const { crews, getCrewName } = useCrews()
   const { getActiveMembersForCrew } = useCrewMemberships()
   const { getEmployeeDisplayName } = useEmployees()
@@ -188,6 +189,7 @@ function TransportDaysPage() {
     transportDays,
     isLoading,
     addTransportDay,
+    addTransportDayRange,
     updateTransportDay,
     deleteTransportDay,
   } = useTransportDays()
@@ -210,24 +212,42 @@ function TransportDaysPage() {
   // table ends up one cell wider than its own header.
   const showRowActions = canUpdateTransportDay || canDeleteTransportDay
 
+  const ledCrewId = useMemo(() => {
+    const ledCrew = crews.find((crew) => isCrewLedBy(crew, session?.id))
+
+    return ledCrew ? String(ledCrew.id) : ''
+  }, [crews, session?.id])
+
   const {
     register,
+    control,
     handleSubmit,
     reset,
     watch,
+    getValues,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<DayFormInput, any, DayFormValues>({
     resolver: zodResolver(dayFormSchema),
-    defaultValues: defaultValues(),
+    defaultValues: defaultValues(ledCrewId),
   })
+
+  useEffect(() => {
+    if (ledCrewId && !getValues('crewId')) {
+      setValue('crewId', ledCrewId)
+    }
+  }, [ledCrewId])
 
   const editingDay = editingDayId
     ? (transportDays.find((day) => day.id === editingDayId) ?? null)
     : null
 
   const formCrewId = watch('crewId')
+  const formDate = watch('date')
+  const formDateTo = watch('dateTo')
   const morningMode = watch('morningMode')
   const afternoonMode = watch('afternoonMode')
+  const isRangeSelected = !editingDay && isRange(formDate, formDateTo)
 
   // Only members of the selected crew can front a taxi fare — the backend enforces it,
   // so the form offers exactly that list instead of every employee in the company.
@@ -256,7 +276,7 @@ function TransportDaysPage() {
       .sort((first, second) => second.date.localeCompare(first.date))
   }, [transportDays, period, crewFilter])
 
-  // Approving a day's fare closes the day, so the backend refuses to save it. Drop out of
+  // Paying a day's fare closes the day, so the backend refuses to save it. Drop out of
   // edit mode rather than leaving the form pointed at a record that can't be saved.
   const isEditingDayOpen = editingDay === null || isDayOpen(editingDay)
 
@@ -269,7 +289,7 @@ function TransportDaysPage() {
   function resetForm() {
     setEditingDayId(null)
     setFormError('')
-    reset(defaultValues())
+    reset(defaultValues(ledCrewId))
   }
 
   function startEdit(dayId: number) {
@@ -293,6 +313,8 @@ function TransportDaysPage() {
     reset({
       crewId: String(day.crewId),
       date: day.date,
+      dateTo: '',
+      skipWeekends: true,
       morningMode: day.morningMode,
       afternoonMode: day.afternoonMode ?? 'None',
       extraBusinessKm: day.extraBusinessKm,
@@ -307,12 +329,20 @@ function TransportDaysPage() {
 
     try {
       if (editingDayId) {
-        await updateTransportDay(editingDayId, toDraft(values))
+        await updateTransportDay(editingDayId, toChanges(values))
+      } else if (isRange(values.date, values.dateTo)) {
+        await addTransportDayRange({
+          crewId: Number(values.crewId),
+          dateFrom: values.date,
+          dateTo: values.dateTo,
+          skipWeekends: values.skipWeekends,
+          ...toChanges(values),
+        })
       } else {
         await addTransportDay({
           crewId: Number(values.crewId),
           date: values.date,
-          ...toDraft(values),
+          ...toChanges(values),
         })
       }
 
@@ -358,13 +388,6 @@ function TransportDaysPage() {
               <CardTitle className="mt-2">
                 {editingDay ? 'Edit Transport Day' : 'Log Transport Day'}
               </CardTitle>
-              <CardDescription className="mt-2">
-                One record per crew per working day. Kilometres come from the
-                crew's route, so a day travelled by car reaches Monthly Sheets
-                and Payouts as soon as it is logged. A leg taken by taxi needs
-                its fare instead — that goes to Taxi Expenses and becomes money
-                once it is approved.
-              </CardDescription>
             </div>
 
             <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
@@ -388,14 +411,52 @@ function TransportDaysPage() {
               </Select>
             </Field>
 
-            <Field label="Date" htmlFor="date" error={errors.date?.message}>
-              <Input
-                id="date"
-                type="date"
-                disabled={!!editingDay}
-                {...register('date')}
-              />
-            </Field>
+            {editingDay ? (
+              <Field label="Date" htmlFor="date" error={errors.date?.message}>
+                <Input id="date" type="date" disabled {...register('date')} />
+              </Field>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="From" htmlFor="date" error={errors.date?.message}>
+                  <Input id="date" type="date" {...register('date')} />
+                </Field>
+
+                <Field
+                  label="To"
+                  htmlFor="dateTo"
+                  error={errors.dateTo?.message}
+                >
+                  <Input
+                    id="dateTo"
+                    type="date"
+                    min={formDate}
+                    {...register('dateTo')}
+                  />
+                </Field>
+              </div>
+            )}
+
+            {isRangeSelected && (
+              <label
+                className="flex items-center gap-3 text-sm font-medium text-slate-700"
+                htmlFor="skipWeekends"
+              >
+                <Controller
+                  name="skipWeekends"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="skipWeekends"
+                      checked={field.value}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true)
+                      }
+                    />
+                  )}
+                />
+                Skip weekends
+              </label>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <Field
@@ -487,7 +548,11 @@ function TransportDaysPage() {
                 ) : (
                   <Plus className="size-4" />
                 )}
-                {editingDay ? 'Save Changes' : 'Log Day'}
+                {editingDay
+                  ? 'Save Changes'
+                  : isRangeSelected
+                    ? 'Log Days'
+                    : 'Log Day'}
               </Button>
 
               <Button
@@ -550,11 +615,8 @@ function TransportDaysPage() {
             </TableHeader>
             <TableBody>
               {visibleDays.map((day) => {
-                // A day is open until the accountant rules on its fare; after that the
-                // backend refuses both edits and deletion, so neither is offered.
                 const isOpen = isDayOpen(day)
-                const closedReason =
-                  'Its taxi fare has been ruled on — reject it first'
+                const closedReason = 'Its taxi fare has already been paid'
 
                 return (
                   <TableRow key={day.id}>
@@ -605,9 +667,6 @@ function TransportDaysPage() {
                               <span className="font-medium text-slate-700">
                                 {formatCurrency(fare.amount)}
                               </span>
-                              <Badge variant={fareBadgeVariant[fare.status]}>
-                                {taxiExpenseStatusLabels[fare.status]}
-                              </Badge>
                             </div>
                           ))}
                         </div>

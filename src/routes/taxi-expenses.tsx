@@ -1,13 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createFileRoute } from '@tanstack/react-router'
-import { Check, PencilLine, Receipt, X } from 'lucide-react'
+import { PencilLine, Receipt } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import type { Period } from '@/components/month-picker'
 import { MonthPicker } from '@/components/month-picker'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -33,12 +32,7 @@ import { useEmployees } from '@/features/employees/employees-context'
 import { useTaxiExpenses } from '@/features/taxi-expenses/taxi-expenses-context'
 import { useTransportDays } from '@/features/transport-days/transport-days-context'
 import { getErrorMessage } from '@/lib/api-error'
-import {
-  isSameId,
-  legLabels,
-  taxiExpenseStatusLabels,
-} from '@/lib/domain-types'
-import type { TaxiExpenseStatus } from '@/lib/domain-types'
+import { isSameId, legLabels } from '@/lib/domain-types'
 import {
   formatCurrency,
   formatDayLabel,
@@ -64,36 +58,15 @@ function todayIsoDate() {
   return new Date().toISOString().slice(0, 10)
 }
 
-const statusBadgeVariant: Record<
-  TaxiExpenseStatus,
-  'warning' | 'success' | 'destructive' | 'secondary'
-> = {
-  Pending: 'warning',
-  Approved: 'success',
-  Rejected: 'destructive',
-  Paid: 'secondary',
-}
-
 function TaxiExpensesPage() {
   const { can } = usePermissions()
   const { crews, getCrewName } = useCrews()
   const { getActiveMembersForCrew } = useCrewMemberships()
   const { getEmployeeDisplayName } = useEmployees()
   const { getDayById } = useTransportDays()
-  const {
-    taxiExpenses,
-    isLoading,
-    updateTaxiExpense,
-    approveTaxiExpense,
-    rejectTaxiExpense,
-  } = useTaxiExpenses()
+  const { taxiExpenses, isLoading, updateTaxiExpense } = useTaxiExpenses()
 
-  // Ruling on a fare and amending it are the only row actions, so a role with neither
-  // gets no column at all — header, cell and empty-state colSpan read this one answer.
-  const showRowActions =
-    can('approveTaxiExpense') ||
-    can('rejectTaxiExpense') ||
-    can('updateTaxiExpense')
+  const canUpdateExpense = can('updateTaxiExpense')
 
   const [period, setPeriod] = useState<Period>(() =>
     getMonthYear(todayIsoDate()),
@@ -202,118 +175,101 @@ function TaxiExpensesPage() {
     }
   })
 
-  async function handleApprove(expenseId: number) {
-    try {
-      await approveTaxiExpense(expenseId)
-    } catch (error) {
-      setFormError(getErrorMessage(error, 'Could not approve this expense.'))
-    }
-  }
-
-  async function handleReject(expenseId: number) {
-    try {
-      await rejectTaxiExpense(expenseId)
-    } catch (error) {
-      setFormError(getErrorMessage(error, 'Could not reject this expense.'))
-    }
-  }
-
   return (
-    <section className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-      <Card>
-        <CardHeader className="flex-row items-start justify-between gap-4">
-          <div>
-            <CardEyebrow>Reimbursements</CardEyebrow>
-            <CardTitle className="mt-2">Amend Taxi Expense</CardTitle>
-            <CardDescription className="mt-2">
-              Taxi rides are recorded on the transport day they belong to. This
-              is where a fare is corrected and then approved or rejected —
-              approving is what turns it into money on Monthly Sheets and
-              Payouts.
-            </CardDescription>
-          </div>
-
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
-            <Receipt className="size-5" />
-          </div>
-        </CardHeader>
-
-        {!editingExpense ? (
-          <p className="mt-6 rounded-2xl bg-sky-50/60 px-4 py-8 text-center text-sm text-slate-500">
-            Pick a pending expense from the list to correct its fare or payer.
-            New rides are logged on the{' '}
-            <span className="font-medium text-slate-700">Transport Days</span>{' '}
-            page.
-          </p>
-        ) : (
-          <form className="mt-2 space-y-5" onSubmit={onSubmit}>
-            <dl className="space-y-2 rounded-2xl bg-sky-50/60 p-4 text-sm">
-              <Summary
-                label="Day"
-                value={editingDay ? formatDayLabel(editingDay.date) : '—'}
-              />
-              <Summary
-                label="Crew"
-                value={editingDay ? getCrewName(editingDay.crewId) : '—'}
-              />
-              <Summary label="Leg" value={legLabels[editingExpense.leg]} />
-            </dl>
-
-            <Field
-              label="Amount (TJS)"
-              htmlFor="amount"
-              error={errors.amount?.message}
-            >
-              <Input
-                id="amount"
-                type="number"
-                min="0"
-                step="1"
-                {...register('amount')}
-              />
-            </Field>
-
-            <Field
-              label="Paid By"
-              htmlFor="paidById"
-              error={errors.paidById?.message}
-            >
-              <Select id="paidById" {...register('paidById')}>
-                <option value="">Select crew member…</option>
-                {editingCrewMembers.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-
-            {formError && (
-              <p className="text-xs font-medium text-red-500">{formError}</p>
-            )}
-
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button
-                type="submit"
-                className="h-11 rounded-2xl bg-sky-600 px-5 text-white hover:bg-sky-700"
-                disabled={isSubmitting}
-              >
-                <PencilLine className="size-4" />
-                Save Changes
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 rounded-2xl border-sky-100 px-5 text-slate-700"
-                onClick={resetForm}
-              >
-                Cancel
-              </Button>
+    <section
+      className={
+        canUpdateExpense
+          ? 'grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[380px_minmax(0,1fr)]'
+          : 'grid gap-6'
+      }
+    >
+      {canUpdateExpense && (
+        <Card>
+          <CardHeader className="flex-row items-start justify-between gap-4">
+            <div>
+              <CardEyebrow>Reimbursements</CardEyebrow>
+              <CardTitle className="mt-2">Amend Taxi Expense</CardTitle>
             </div>
-          </form>
-        )}
-      </Card>
+
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+              <Receipt className="size-5" />
+            </div>
+          </CardHeader>
+
+          {!editingExpense ? (
+            <p className="mt-6 rounded-2xl bg-sky-50/60 px-4 py-8 text-center text-sm text-slate-500">
+              No expense selected.
+            </p>
+          ) : (
+            <form className="mt-2 space-y-5" onSubmit={onSubmit}>
+              <dl className="space-y-2 rounded-2xl bg-sky-50/60 p-4 text-sm">
+                <Summary
+                  label="Day"
+                  value={editingDay ? formatDayLabel(editingDay.date) : '—'}
+                />
+                <Summary
+                  label="Crew"
+                  value={editingDay ? getCrewName(editingDay.crewId) : '—'}
+                />
+                <Summary label="Leg" value={legLabels[editingExpense.leg]} />
+              </dl>
+
+              <Field
+                label="Amount (TJS)"
+                htmlFor="amount"
+                error={errors.amount?.message}
+              >
+                <Input
+                  id="amount"
+                  type="number"
+                  min="0"
+                  step="1"
+                  {...register('amount')}
+                />
+              </Field>
+
+              <Field
+                label="Paid By"
+                htmlFor="paidById"
+                error={errors.paidById?.message}
+              >
+                <Select id="paidById" {...register('paidById')}>
+                  <option value="">Select crew member…</option>
+                  {editingCrewMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              {formError && (
+                <p className="text-xs font-medium text-red-500">{formError}</p>
+              )}
+
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Button
+                  type="submit"
+                  className="h-11 rounded-2xl bg-sky-600 px-5 text-white hover:bg-sky-700"
+                  disabled={isSubmitting}
+                >
+                  <PencilLine className="size-4" />
+                  Save Changes
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 rounded-2xl border-sky-100 px-5 text-slate-700"
+                  onClick={resetForm}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          )}
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="flex-col gap-4 border-b border-sky-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
@@ -355,8 +311,7 @@ function TaxiExpensesPage() {
                 <TableHead>Leg</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
                 <TableHead>Paid By</TableHead>
-                <TableHead>Status</TableHead>
-                {showRowActions && (
+                {canUpdateExpense && (
                   <TableHead className="text-right">Actions</TableHead>
                 )}
               </TableRow>
@@ -364,7 +319,7 @@ function TaxiExpensesPage() {
             <TableBody>
               {visibleExpenses.map((expense) => {
                 const day = getDayById(expense.transportDayId)
-                const isPending = expense.taxiExpenseStatus === 'Pending'
+                const isPaid = expense.taxiExpenseStatus === 'Paid'
 
                 return (
                   <TableRow key={expense.id}>
@@ -379,53 +334,19 @@ function TaxiExpensesPage() {
                     <TableCell>
                       {getEmployeeDisplayName(expense.paidById)}
                     </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={statusBadgeVariant[expense.taxiExpenseStatus]}
-                      >
-                        {taxiExpenseStatusLabels[expense.taxiExpenseStatus]}
-                      </Badge>
-                    </TableCell>
-                    {showRowActions && (
+                    {canUpdateExpense && (
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {isPending && can('approveTaxiExpense') && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon-sm"
-                              className="rounded-full border-emerald-200 text-emerald-700"
-                              onClick={() => handleApprove(expense.id)}
-                              title="Approve"
-                            >
-                              <Check className="size-3.5" />
-                            </Button>
-                          )}
-                          {isPending && can('rejectTaxiExpense') && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon-sm"
-                              className="rounded-full border-red-200 text-red-600"
-                              onClick={() => handleReject(expense.id)}
-                              title="Reject"
-                            >
-                              <X className="size-3.5" />
-                            </Button>
-                          )}
-                          {isPending && can('updateTaxiExpense') && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon-sm"
-                              className="rounded-full border-sky-100 text-sky-700"
-                              onClick={() => startEdit(expense.id)}
-                              title="Amend"
-                            >
-                              <PencilLine className="size-3.5" />
-                            </Button>
-                          )}
-                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon-sm"
+                          className="rounded-full border-sky-100 text-sky-700"
+                          disabled={isPaid}
+                          onClick={() => startEdit(expense.id)}
+                          title={isPaid ? 'Already paid' : 'Amend'}
+                        >
+                          <PencilLine className="size-3.5" />
+                        </Button>
                       </TableCell>
                     )}
                   </TableRow>
@@ -435,7 +356,7 @@ function TaxiExpensesPage() {
               {!isLoading && visibleExpenses.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={showRowActions ? 7 : 6}
+                    colSpan={canUpdateExpense ? 6 : 5}
                     className="py-10 text-center text-slate-400"
                   >
                     No taxi expenses recorded for this period.

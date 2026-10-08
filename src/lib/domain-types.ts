@@ -114,6 +114,13 @@ export interface Crew {
   seatCapacity: number
 }
 
+export function isCrewLedBy(crew: Crew, userId: number | undefined) {
+  return (
+    userId !== undefined &&
+    (crew.driverLeadId === userId || crew.crewLeadId === userId)
+  )
+}
+
 export interface CrewMembership {
   id: number
   crewId: number
@@ -139,10 +146,8 @@ export const transportModeLabels: Record<TransportMode, string> = {
 // "drove in the morning, taxied home" case representable without a hack. The driver
 // and the route distance are derived server-side from the crew — not set here.
 //
-// A logged day needs no further sign-off for its kilometres: the crew's route is
-// attached to the crew, so the distance is known the moment the day is recorded and
-// flows straight to Monthly Sheets and Payouts. Money is the part that gets reviewed,
-// and that review happens on the taxi fare itself.
+// A logged day needs no further sign-off: its kilometres and taxi fares flow straight
+// to Monthly Sheets and Payouts.
 export interface TransportDay {
   id: number
   crewId: number
@@ -170,24 +175,14 @@ export interface TaxiFareDraft {
   paidById: number
 }
 
-// The same fare once it exists server-side. `status` is what decides whether it is money
-// yet, and it also decides whether the day can still be changed: once a fare has been
-// ruled on, its day is closed.
+// The same fare once it exists server-side. Once it is paid, its day is closed.
 export interface TaxiFare extends TaxiFareDraft {
   id: number
   status: TaxiExpenseStatus
 }
 
-/** A day stays editable and deletable only while every fare on it is still Pending. */
 export function isDayOpen(day: TransportDay) {
-  return day.taxiFares.every((fare) => fare.status === 'Pending')
-}
-
-/** Only approved fares are money the company owes; the rest are not counted anywhere. */
-export function owedTaxiAmount(fares: TaxiFare[]) {
-  return fares
-    .filter((fare) => fare.status === 'Approved' || fare.status === 'Paid')
-    .reduce((total, fare) => total + fare.amount, 0)
+  return day.taxiFares.every((fare) => fare.status !== 'Paid')
 }
 
 // --- Taxi expenses (mirrors Transportation.Domain.Entities.TaxiExpense) ---
@@ -200,23 +195,10 @@ export const legLabels: Record<Leg, string> = {
   Afternoon: 'Afternoon',
 }
 
-// Mirrors the backend's TaxiExpenseStatus exactly. Only Approved expenses count toward
-// a crew's payout, and they stay Approved — owed, not yet handed over — until the sheet
-// that carries them is paid, which is what flips them Approved -> Paid.
-export const taxiExpenseStatuses = [
-  'Pending',
-  'Approved',
-  'Rejected',
-  'Paid',
-] as const
+// Mirrors the backend's TaxiExpenseStatus: a fare is Pending until the sheet that
+// carries it is paid.
+export const taxiExpenseStatuses = ['Pending', 'Paid'] as const
 export type TaxiExpenseStatus = (typeof taxiExpenseStatuses)[number]
-
-export const taxiExpenseStatusLabels: Record<TaxiExpenseStatus, string> = {
-  Pending: 'Pending',
-  Approved: 'Approved',
-  Rejected: 'Rejected',
-  Paid: 'Paid',
-}
 
 export interface TaxiExpense {
   id: number

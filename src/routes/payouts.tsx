@@ -5,13 +5,7 @@ import { useMemo, useState } from 'react'
 import type { Period } from '@/components/month-picker'
 import { MonthPicker } from '@/components/month-picker'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardDescription,
-  CardEyebrow,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardEyebrow, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -116,13 +110,6 @@ function PayoutsPage() {
             <CardTitle className="mt-2">
               {formatMonthLabel(period.year, period.month)}
             </CardTitle>
-            <CardDescription className="mt-2">
-              Every generated sheet for the month, one row per crew. The amount
-              released covers the crew's kilometres at the index its sheet was
-              priced with, the taxi money it fronted, and the allowance for a
-              driver-lead's own car. It goes to the lead, who distributes it
-              inside the team. Each crew is settled once a month.
-            </CardDescription>
           </div>
 
           <MonthPicker value={period} onChange={setPeriod} />
@@ -140,9 +127,7 @@ function PayoutsPage() {
           <div className="flex flex-col items-center gap-3 py-12 text-center">
             <Wallet className="size-8 text-sky-300" />
             <p className="text-slate-500">
-              No generated sheets for this period yet — generate one on the{' '}
-              <span className="font-medium text-slate-700">Monthly Sheets</span>{' '}
-              page.
+              No generated sheets for this period yet.
             </p>
           </div>
         ) : (

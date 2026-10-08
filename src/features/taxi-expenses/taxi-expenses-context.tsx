@@ -22,7 +22,7 @@ interface PaginatedResult<T> {
   totalCount: number
 }
 
-// What may be corrected on a fare that has not been ruled on yet. The leg and the day
+// What may be corrected on a fare that has not been paid yet. The leg and the day
 // are not among them: which legs were taken by taxi is what the transport day says.
 // paidById stays a string here — it comes straight from a <select> element's raw form
 // value and is only turned into a number at the API boundary, in toApiPayload.
@@ -45,9 +45,12 @@ function toTaxiExpense(dto: TaxiExpenseApiDto): TaxiExpense {
 }
 
 async function fetchTaxiExpenses() {
-  const response = await apiClient.get<PaginatedResult<TaxiExpenseApiDto>>('/api/TaxiExpense/GetAll', {
-    params: nestedLargePage,
-  })
+  const response = await apiClient.get<PaginatedResult<TaxiExpenseApiDto>>(
+    '/api/TaxiExpense/GetAll',
+    {
+      params: nestedLargePage,
+    },
+  )
 
   return response.data.items.map(toTaxiExpense)
 }
@@ -62,14 +65,15 @@ function toApiPayload(draft: TaxiExpenseDraft) {
 // Neither creating nor deleting an expense is part of this contract, on purpose: a taxi
 // ride is recorded on the transport day it belongs to (see features/transport-days),
 // which is what keeps a taxi leg from ever existing without a fare behind it — or a fare
-// without a ride. A fare the company will not pay is rejected, not deleted.
+// without a ride.
 interface TaxiExpensesContextValue {
   taxiExpenses: TaxiExpense[]
   isLoading: boolean
   getExpensesForDay: (transportDayId: number) => TaxiExpense[]
-  updateTaxiExpense: (expenseId: number, draft: TaxiExpenseDraft) => Promise<void>
-  approveTaxiExpense: (expenseId: number) => Promise<void>
-  rejectTaxiExpense: (expenseId: number) => Promise<void>
+  updateTaxiExpense: (
+    expenseId: number,
+    draft: TaxiExpenseDraft,
+  ) => Promise<void>
 }
 
 const TaxiExpensesContext = createContext<TaxiExpensesContextValue | null>(null)
@@ -95,18 +99,16 @@ export function TaxiExpensesProvider({ children }: { children: ReactNode }) {
   const updateMutation = useMutation({
     // UpdateTaxiExpenseRequest is bound [FromQuery] on the backend despite being a
     // PUT — send the full payload as query params, not a JSON body.
-    mutationFn: ({ expenseId, draft }: { expenseId: number; draft: TaxiExpenseDraft }) =>
-      apiClient.put(`/api/TaxiExpense/Update/${expenseId}`, undefined, { params: toApiPayload(draft) }),
-    onSuccess: invalidate,
-  })
-
-  const approveMutation = useMutation({
-    mutationFn: (expenseId: number) => apiClient.put(`/api/TaxiExpense/Approve/${expenseId}`),
-    onSuccess: invalidate,
-  })
-
-  const rejectMutation = useMutation({
-    mutationFn: (expenseId: number) => apiClient.put(`/api/TaxiExpense/Reject/${expenseId}`),
+    mutationFn: ({
+      expenseId,
+      draft,
+    }: {
+      expenseId: number
+      draft: TaxiExpenseDraft
+    }) =>
+      apiClient.put(`/api/TaxiExpense/Update/${expenseId}`, undefined, {
+        params: toApiPayload(draft),
+      }),
     onSuccess: invalidate,
   })
 
@@ -115,15 +117,21 @@ export function TaxiExpensesProvider({ children }: { children: ReactNode }) {
       taxiExpenses,
       isLoading,
       getExpensesForDay: (transportDayId) =>
-        taxiExpenses.filter((expense) => expense.transportDayId === transportDayId),
-      updateTaxiExpense: async (expenseId, draft) => { await updateMutation.mutateAsync({ expenseId, draft }) },
-      approveTaxiExpense: async (expenseId) => { await approveMutation.mutateAsync(expenseId) },
-      rejectTaxiExpense: async (expenseId) => { await rejectMutation.mutateAsync(expenseId) },
+        taxiExpenses.filter(
+          (expense) => expense.transportDayId === transportDayId,
+        ),
+      updateTaxiExpense: async (expenseId, draft) => {
+        await updateMutation.mutateAsync({ expenseId, draft })
+      },
     }),
-    [taxiExpenses, isLoading, updateMutation, approveMutation, rejectMutation],
+    [taxiExpenses, isLoading, updateMutation],
   )
 
-  return <TaxiExpensesContext.Provider value={value}>{children}</TaxiExpensesContext.Provider>
+  return (
+    <TaxiExpensesContext.Provider value={value}>
+      {children}
+    </TaxiExpensesContext.Provider>
+  )
 }
 
 export function useTaxiExpenses() {

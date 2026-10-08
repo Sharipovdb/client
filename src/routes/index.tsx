@@ -4,20 +4,13 @@ import {
   AlertTriangle,
   Bus,
   CalendarCheck,
-  CircleDollarSign,
   Receipt,
   Users,
   Wallet,
 } from 'lucide-react'
 import { useMemo } from 'react'
 
-import {
-  Card,
-  CardDescription,
-  CardEyebrow,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardEyebrow, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatCard } from '@/components/ui/stat-card'
 import {
   Table,
@@ -82,42 +75,27 @@ function DashboardPage() {
     [transportDays, period],
   )
 
-  // Money the company owes but has not released: approved fares only. A pending fare
-  // has not been ruled on and a rejected one never will be, so neither is owed.
-  const owedTaxiThisPeriod = useMemo(
+  const unpaidTaxiThisPeriod = useMemo(
     () =>
       taxiExpenses
         .filter(
           (expense) =>
             dayIdsInPeriod.has(expense.transportDayId) &&
-            expense.taxiExpenseStatus === 'Approved',
+            expense.taxiExpenseStatus === 'Pending',
         )
         .reduce((total, expense) => total + expense.amount, 0),
-    [taxiExpenses, dayIdsInPeriod],
-  )
-
-  const pendingApprovalCount = useMemo(
-    () =>
-      taxiExpenses.filter(
-        (expense) =>
-          dayIdsInPeriod.has(expense.transportDayId) &&
-          expense.taxiExpenseStatus === 'Pending',
-      ).length,
     [taxiExpenses, dayIdsInPeriod],
   )
 
   const crewData = useMemo(
     () =>
       crews.map((crew) => {
-        const days = getDaysForCrewMonth(
-          crew.id,
-          period.year,
-          period.month,
-        )
+        const days = getDaysForCrewMonth(crew.id, period.year, period.month)
         // Counted in days, not legs — a day is the unit the report and the accountant
         // work in. A day that drove one way and taxied the other counts in both.
         const drivenDays = days.filter(
-          (day) => day.morningMode === 'Driven' || day.afternoonMode === 'Driven',
+          (day) =>
+            day.morningMode === 'Driven' || day.afternoonMode === 'Driven',
         ).length
         const taxiDays = days.filter(
           (day) => day.morningMode === 'Taxi' || day.afternoonMode === 'Taxi',
@@ -166,16 +144,16 @@ function DashboardPage() {
       hint: `${driverCount} drivers`,
     },
     { label: 'Days logged', value: dayIdsInPeriod.size, icon: CalendarCheck },
-    {
-      label: 'Sheets to confirm',
-      value: draftSheets.length,
-      icon: AlertTriangle,
-    },
     ...(showFinance
       ? [
           {
-            label: 'Taxi approved, unpaid',
-            value: formatCurrency(owedTaxiThisPeriod),
+            label: 'Sheets to confirm',
+            value: draftSheets.length,
+            icon: AlertTriangle,
+          },
+          {
+            label: 'Taxi unpaid',
+            value: formatCurrency(unpaidTaxiThisPeriod),
             icon: Receipt,
           },
           {
@@ -189,14 +167,12 @@ function DashboardPage() {
 
   const pendingActions = buildPendingActions({
     canOpenSheets: canOpen(appPagePaths.monthlySheets),
-    canOpenTaxiExpenses:
-      canOpen(appPagePaths.taxiExpenses) && can('approveTaxiExpense'),
     canOpenCrews: canOpen(appPagePaths.crews),
+    canConfirm: can('confirmSheet'),
     canGenerate: can('generateSheet'),
     draftCount: draftSheets.length,
     ungeneratedCount: ungeneratedSheets.length,
     overflowCount: overflowCrews.length,
-    pendingApprovalCount,
   })
 
   const crewColumnCount = showFinance ? 5 : 4
@@ -224,10 +200,6 @@ function DashboardPage() {
           <CardHeader className="border-b border-sky-100 pb-5">
             <CardEyebrow>Crews</CardEyebrow>
             <CardTitle className="mt-2">This month by crew</CardTitle>
-            <CardDescription className="mt-2">
-              Seats and logged days per crew
-              {showFinance ? ', with the money a generated sheet owes its lead' : ''}.
-            </CardDescription>
           </CardHeader>
 
           <div className="mt-4">
@@ -237,7 +209,9 @@ function DashboardPage() {
                   <TableHead>Crew</TableHead>
                   <TableHead className="text-center">Seats</TableHead>
                   <TableHead className="text-center">Days</TableHead>
-                  <TableHead className="text-center">Driven / Taxi days</TableHead>
+                  <TableHead className="text-center">
+                    Driven / Taxi days
+                  </TableHead>
                   {showFinance && (
                     <TableHead className="text-right">Payout</TableHead>
                   )}
@@ -351,13 +325,12 @@ interface PendingAction {
 
 interface PendingActionInput {
   canOpenSheets: boolean
-  canOpenTaxiExpenses: boolean
   canOpenCrews: boolean
+  canConfirm: boolean
   canGenerate: boolean
   draftCount: number
   ungeneratedCount: number
   overflowCount: number
-  pendingApprovalCount: number
 }
 
 // Only surfaces work the signed-in role can actually act on, so nobody is pointed at
@@ -365,7 +338,7 @@ interface PendingActionInput {
 function buildPendingActions(input: PendingActionInput): PendingAction[] {
   const actions: PendingAction[] = []
 
-  if (input.canOpenSheets && input.draftCount > 0) {
+  if (input.canOpenSheets && input.canConfirm && input.draftCount > 0) {
     actions.push({
       to: appPagePaths.monthlySheets,
       icon: CalendarCheck,
@@ -380,15 +353,6 @@ function buildPendingActions(input: PendingActionInput): PendingAction[] {
       icon: CalendarCheck,
       tone: 'default',
       text: `${input.ungeneratedCount} crew(s) with logged days but no sheet generated`,
-    })
-  }
-
-  if (input.canOpenTaxiExpenses && input.pendingApprovalCount > 0) {
-    actions.push({
-      to: appPagePaths.taxiExpenses,
-      icon: CircleDollarSign,
-      tone: 'warning',
-      text: `${input.pendingApprovalCount} taxi expense(s) awaiting approval`,
     })
   }
 

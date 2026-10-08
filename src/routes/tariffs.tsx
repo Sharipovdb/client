@@ -161,11 +161,6 @@ function TariffsPage() {
               <CardTitle className="mt-2">
                 {editingTariff ? 'Edit Tariff' : 'Add Tariff'}
               </CardTitle>
-              <CardDescription className="mt-2">
-                A named price for one leg driven in the crew's own car. Pick it
-                for a crew on the Crews page to pay that crew per trip instead
-                of by the kilometre — a day there and back is two legs.
-              </CardDescription>
             </div>
 
             <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
@@ -234,8 +229,7 @@ function TariffsPage() {
             <CardEyebrow>Tariffs list</CardEyebrow>
             <CardTitle className="mt-2">Prices per trip</CardTitle>
             <CardDescription className="mt-2">
-              {isLoading ? 'Loading…' : `${tariffs.length} tariffs available.`}{' '}
-              A crew with no tariff is measured along its route instead.
+              {isLoading ? 'Loading…' : `${tariffs.length} tariffs available.`}
             </CardDescription>
           </div>
         </CardHeader>

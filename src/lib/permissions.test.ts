@@ -32,7 +32,9 @@ describe('page access', () => {
 
   it('worker only gets the dashboard', () => {
     expect(canAccessPath([...worker], dashboard)).toBe(true)
-    expect(getNavigationItemsForRole([...worker]).map((item) => item.to)).toEqual([dashboard])
+    expect(
+      getNavigationItemsForRole([...worker]).map((item) => item.to),
+    ).toEqual([dashboard])
   })
 
   it('route manager handles assignment but no finance', () => {
@@ -49,13 +51,16 @@ describe('page access', () => {
     expect(canAccessPath([...crewLead], employees)).toBe(false)
   })
 
-  // Both lead kinds do the same job on the same screens — the difference between them
-  // is who drives, not what they may open. Neither one administers the fleet.
-  it('both lead kinds get the same pages, and neither administers vehicles', () => {
+  it('both lead kinds log days, and neither administers vehicles', () => {
     expect(canAccessPath([...driverLead], transportDays)).toBe(true)
     expect(canAccessPath([...crewLead], transportDays)).toBe(true)
     expect(canAccessPath([...driverLead], vehicles)).toBe(false)
     expect(canAccessPath([...crewLead], vehicles)).toBe(false)
+  })
+
+  it('a driver-lead opens the monthly sheets, a crew lead does not', () => {
+    expect(canAccessPath([...driverLead], monthlySheets)).toBe(true)
+    expect(canAccessPath([...crewLead], monthlySheets)).toBe(false)
   })
 
   it('accountant sees the finance pages but not the directory', () => {
@@ -96,11 +101,17 @@ describe('capabilities', () => {
     expect(hasCapability([...worker], 'viewFinance')).toBe(false)
   })
 
-  it('only accountant/admin approve taxi expenses', () => {
-    expect(hasCapability([...accountant], 'approveTaxiExpense')).toBe(true)
-    expect(hasCapability([...admin], 'approveTaxiExpense')).toBe(true)
-    expect(hasCapability([...crewLead], 'approveTaxiExpense')).toBe(false)
-    expect(hasCapability([...driverLead], 'approveTaxiExpense')).toBe(false)
+  it('a driver-lead reads the monthly sheet without acting on it', () => {
+    for (const capability of [
+      'generateSheet',
+      'confirmSheet',
+      'deleteSheet',
+      'paySheet',
+      'printSheet',
+    ] as const) {
+      expect(hasCapability([...driverLead], capability)).toBe(false)
+      expect(hasCapability([...accountant], capability)).toBe(true)
+    }
   })
 
   it('only accountant/admin settle a crew payout', () => {
@@ -111,11 +122,12 @@ describe('capabilities', () => {
     expect(hasCapability([...routeManager], 'paySheet')).toBe(false)
   })
 
-  it('leads log the day; the accountant rules on what it cost', () => {
+  it('leads log the day and correct its fare; the accountant does neither', () => {
     expect(hasCapability([...crewLead], 'createTransportDay')).toBe(true)
     expect(hasCapability([...driverLead], 'deleteTransportDay')).toBe(true)
+    expect(hasCapability([...driverLead], 'updateTaxiExpense')).toBe(true)
     expect(hasCapability([...accountant], 'createTransportDay')).toBe(false)
-    expect(hasCapability([...crewLead], 'rejectTaxiExpense')).toBe(false)
+    expect(hasCapability([...accountant], 'updateTaxiExpense')).toBe(false)
   })
 
   it('the route manager owns the fleet and the routes, not the money', () => {

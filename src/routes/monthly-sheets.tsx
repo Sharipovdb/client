@@ -100,6 +100,7 @@ function MonthlySheetsPage() {
     deleteSheet,
   } = useMonthlySheets()
   const printReport = useMonthlyReportPrinter()
+  const canPriceSheet = can('generateSheet')
 
   const [period, setPeriod] = useState<Period>(() =>
     getMonthYear(todayIsoDate()),
@@ -154,16 +155,12 @@ function MonthlySheetsPage() {
 
   const previewClosingDate = useDebouncedValue(closingDate)
 
-  // Closing on the last day is the ordinary case and needs no explanation; closing early
-  // is what leaves days for the next sheet and has to be visible.
-  const closesEarly = closingDate < lastDayOfMonth(period)
-
   // A month without a saved sheet is still worth reading, so what generating would
   // produce is loaded straight away rather than hidden behind a button. A saved sheet
   // always wins: once the month exists, that is the record and there is nothing to
   // preview.
   const preview = useMonthlySheetPreview(
-    crew && !sheet
+    crew && !sheet && canPriceSheet
       ? {
           crewId: crew.id,
           year: period.year,
@@ -200,9 +197,7 @@ function MonthlySheetsPage() {
   const hasUnappliedClosingDate =
     sheet !== undefined && !sheet.isConfirmed && closingDate !== sheet.periodEnd
 
-  // A crew on a tariff is paid per trip, so the kilometre index has nothing to price
-  // and the box is closed rather than left inviting a figure nothing would apply.
-  const isPricedByTariff = displayedSheet?.isPricedByTariff ?? false
+  const isPricingLocked = !canPriceSheet || (sheet?.isConfirmed ?? false)
 
   function selectCrew(nextCrewId: number) {
     setCrewId(nextCrewId)
@@ -293,16 +288,6 @@ function MonthlySheetsPage() {
             <CardTitle className="mt-2">
               {formatMonthLabel(period.year, period.month)}
             </CardTitle>
-            <CardDescription className="mt-2">
-              One sheet per crew per month, computed from its logged transport
-              days. A crew's commute is priced along its route with the index
-              below, or at a flat amount per trip if it was put on a tariff;
-              business travel beyond the commute is priced with the index either
-              way. A taxi fare counts once it is approved, and a driver-lead is
-              additionally owed the monthly allowance for their own car. The
-              whole month is settled with the crew's lead as one amount, which
-              they distribute inside the team.
-            </CardDescription>
           </div>
 
           <div className="flex w-full flex-wrap items-end gap-3 sm:w-auto">
@@ -338,7 +323,7 @@ function MonthlySheetsPage() {
                 inputMode="decimal"
                 placeholder="0.00"
                 value={kmRateText}
-                disabled={sheet?.isConfirmed ?? false}
+                disabled={isPricingLocked}
                 onChange={(event) => editRate(event.target.value)}
               />
             </div>
@@ -358,54 +343,25 @@ function MonthlySheetsPage() {
                 min={firstDayOfMonth(period)}
                 max={lastDayOfMonth(period)}
                 value={closingDate}
-                disabled={sheet?.isConfirmed ?? false}
+                disabled={isPricingLocked}
                 onChange={(event) => editClosingDate(event.target.value)}
               />
             </div>
           </div>
         </CardHeader>
 
-        {/* A confirmed sheet is signed off at the index it was priced with, so the box
-            is read-only rather than quietly accepting a figure nothing would apply. */}
-        {isPricedByTariff ? (
-          <p className="mt-4 text-sm text-slate-500">
-            This crew is settled per trip at{' '}
-            <span className="font-medium text-slate-700">
-              {formatCurrency(displayedSheet?.tariffPerLeg ?? 0)} per leg
-            </span>
-            , so its commute is not measured. The index above still prices its
-            business travel.
-          </p>
-        ) : sheet?.isConfirmed ? (
-          <p className="mt-4 text-sm text-slate-400">
-            Priced at {formatKmRate(sheet.kmRate)}. Reopen the sheet to change
-            it.
-          </p>
-        ) : (
-          (hasUnappliedRate || hasUnappliedClosingDate) && (
-            <p className="mt-4 text-sm font-medium text-amber-600">
-              {hasUnappliedRate && !hasUnappliedClosingDate
-                ? 'This index has not been applied yet — recalculate the sheet to price the month with it.'
-                : 'The closing date has not been applied yet — recalculate the sheet to settle up to it.'}
-            </p>
-          )
-        )}
-
-        {closesEarly && (
-          <p className="mt-3 text-sm text-slate-500">
-            Settling only up to{' '}
-            <span className="font-medium text-slate-700">{closingDate}</span>.
-            The rest of {formatMonthLabel(period.year, period.month)} carries
-            over to this crew's next sheet.
+        {!isPricingLocked && (hasUnappliedRate || hasUnappliedClosingDate) && (
+          <p className="mt-4 text-sm font-medium text-amber-600">
+            {hasUnappliedRate && !hasUnappliedClosingDate
+              ? 'This index has not been applied yet — recalculate the sheet to price the month with it.'
+              : 'The closing date has not been applied yet — recalculate the sheet to settle up to it.'}
           </p>
         )}
       </Card>
 
       {!crew ? (
         <Card>
-          <p className="py-10 text-center text-slate-400">
-            Add a crew first on the Crews page.
-          </p>
+          <p className="py-10 text-center text-slate-400">No crews yet.</p>
         </Card>
       ) : isLoading || preview.isLoading ? (
         <Card>
@@ -518,7 +474,7 @@ function MonthlySheetsPage() {
                 </Button>
               )}
 
-              {displayedSheet && (
+              {displayedSheet && can('printSheet') && (
                 <Button
                   type="button"
                   variant="outline"
@@ -574,7 +530,6 @@ function MonthlySheetsPage() {
                     label="Legs driven"
                     value={report.totalDrivenLegs}
                     icon={RefreshCw}
-                    hint="A day there and back is two legs"
                   />
                 ) : (
                   <StatCard
@@ -627,14 +582,12 @@ function MonthlySheetsPage() {
                     label="Car allowance"
                     value={formatCurrency(report.amortizationAmount)}
                     icon={Car}
-                    hint="Amortization for the lead's own car"
                   />
                 )}
                 <StatCard
                   label="Total payable"
                   value={formatCurrency(report.totalPayable)}
                   icon={BadgeCheck}
-                  hint="The single amount handed to the lead"
                 />
               </div>
 

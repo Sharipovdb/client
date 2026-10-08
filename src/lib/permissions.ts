@@ -35,8 +35,8 @@ const {
 // Derived from the roles in the spec:
 // - Route Manager assigns people to crews and routes; no financial screens.
 // - Crew leads (manager or driver) log days and the taxi fares that go with them.
-//   They do not open the money screens: ruling on a fare and settling a month are the
-//   accountant's, matching RoleAuthorize on the controllers.
+//   A driver-lead may read the monthly sheets of their crew; settling a month stays
+//   the accountant's.
 // - The accountant "sees all" for reconciliation.
 // - A worker only notifies absence, so they get the dashboard until an Absences page exists.
 // Employees (login accounts + business profile in one, backed by /api/User) is where
@@ -64,7 +64,7 @@ const rolePagePaths: Partial<Record<AppRole, ReadonlyArray<string>>> = {
     taxiExpenses,
   ],
   CrewLead: [dashboard, transportDays, taxiExpenses],
-  DriverLead: [dashboard, transportDays, taxiExpenses],
+  DriverLead: [dashboard, transportDays, taxiExpenses, monthlySheets],
   Accountant: [
     dashboard,
     transportDays,
@@ -106,6 +106,7 @@ export type Capability =
   | 'confirmSheet' // signs the month off, and withdraws that signature while unpaid
   | 'deleteSheet' // drops a draft entirely; a paid sheet is final and neither applies
   | 'paySheet' // release a crew's month to its lead; a lead confirms but never pays
+  | 'printSheet'
 
   // Transport days. A logged day needs no sign-off — its kilometres are known from the
   // crew's route — so there is nothing to confirm here.
@@ -114,10 +115,8 @@ export type Capability =
   | 'deleteTransportDay'
 
   // Taxi expenses. Rides are created and removed through the transport day; this screen
-  // only corrects a fare and rules on it, which is the one gate money passes.
+  // only corrects a fare.
   | 'updateTaxiExpense'
-  | 'approveTaxiExpense'
-  | 'rejectTaxiExpense'
 
   // Routes
   | 'createRoute'
@@ -142,8 +141,6 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'deleteTransportDay',
 
     'updateTaxiExpense',
-    'approveTaxiExpense',
-    'rejectTaxiExpense',
 
     'createRoute',
     'updateRoute',
@@ -162,6 +159,7 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'confirmSheet',
     'deleteSheet',
     'paySheet',
+    'printSheet',
   ],
   RouteManager: [
     'createRoute',
@@ -187,9 +185,6 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'updateTaxiExpense',
   ],
   Accountant: [
-    'approveTaxiExpense',
-    'rejectTaxiExpense',
-
     'createTariff',
     'updateTariff',
     'deleteTariff',
@@ -199,6 +194,7 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'confirmSheet',
     'deleteSheet',
     'paySheet',
+    'printSheet',
   ],
 }
 

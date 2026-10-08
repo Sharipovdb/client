@@ -146,10 +146,6 @@ function RoutesPage() {
               <CardTitle className="mt-2">
                 {editingRoute ? 'Edit Route' : 'Add Route'}
               </CardTitle>
-              <CardDescription className="mt-2">
-                The standard one-way distance is used as the default commute km
-                for driven days.
-              </CardDescription>
             </div>
 
             <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">

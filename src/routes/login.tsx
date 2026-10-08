@@ -80,10 +80,6 @@ function LoginPage() {
           <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
             Sign in
           </h1>
-          <p className="text-sm leading-6 text-slate-500">
-            Sign in with your phone number and password. What you can see and do
-            depends on your role.
-          </p>
         </div>
 
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
