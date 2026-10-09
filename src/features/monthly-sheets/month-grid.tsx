@@ -12,6 +12,9 @@ const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
  * A crew on a tariff earns by the leg, so its cells count legs; every other crew is
  * priced by distance and shows kilometres.
  *
+ * A lead paid in advance also sees, under each travelled day, what is left of the
+ * opening balance once that day is taken off it.
+ *
  * The grid spans the period actually settled, which can run from one month into the next,
  * so the 1st of a month is labelled with its name to keep the day numbers unambiguous.
  */
@@ -83,6 +86,17 @@ export function MonthGrid({ report }: { report: MonthlyReport }) {
               {day.taxiAmount > 0 && (
                 <p className="mt-0.5 text-xs font-medium text-amber-700">
                   {formatCurrency(day.taxiAmount)}
+                </p>
+              )}
+              {day.balance !== null && (
+                <p
+                  className={
+                    day.balance < 0
+                      ? 'mt-0.5 text-xs font-semibold text-red-600'
+                      : 'mt-0.5 text-xs font-semibold text-emerald-700'
+                  }
+                >
+                  {formatCurrency(day.balance)}
                 </p>
               )}
             </div>

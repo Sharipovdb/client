@@ -7,6 +7,7 @@ import {
   Coins,
   FileText,
   Loader2,
+  PiggyBank,
   RefreshCw,
   Sparkles,
   Trash2,
@@ -79,6 +80,25 @@ function rateAsNumber(text: string) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
 }
 
+/** A saved opening balance as text for the box; a month settled in arrears is empty. */
+function balanceAsText(openingBalance: number | null | undefined) {
+  return openingBalance === null || openingBalance === undefined
+    ? ''
+    : String(openingBalance)
+}
+
+/**
+ * What the box means in TJS. An empty box is no advance at all, which is not the same as
+ * an advance of zero: only an advance makes the days come off a balance.
+ */
+function balanceAsNumber(text: string) {
+  if (text.trim() === '') return null
+
+  const parsed = Number(text)
+
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+}
+
 function lastDayOfMonth({ year, month }: Period) {
   return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10)
 }
@@ -120,6 +140,12 @@ function MonthlySheetsPage() {
     text: string
   } | null>(null)
 
+  // The advance handed to the lead belongs to one crew's month just like the index.
+  const [balanceDraft, setBalanceDraft] = useState<{
+    periodKey: string
+    text: string
+  } | null>(null)
+
   // The day the accountant is closing on. Like the index, it belongs to one crew's month,
   // so what is typed for August must not follow the selection into September.
   const [closingDraft, setClosingDraft] = useState<{
@@ -146,6 +172,13 @@ function MonthlySheetsPage() {
   // stop rather than firing on every digit.
   const previewKmRate = useDebouncedValue(kmRate)
 
+  const openingBalanceText =
+    balanceDraft?.periodKey === periodKey
+      ? balanceDraft.text
+      : balanceAsText(sheet?.openingBalance)
+  const openingBalance = balanceAsNumber(openingBalanceText)
+  const previewOpeningBalance = useDebouncedValue(openingBalance)
+
   // A saved sheet already knows what it closed on; an unsaved one defaults to the whole
   // month, which is what the accountant means unless they say otherwise.
   const closingDate =
@@ -166,6 +199,7 @@ function MonthlySheetsPage() {
           year: period.year,
           month: period.month,
           kmRate: previewKmRate,
+          openingBalance: previewOpeningBalance,
           periodEnd: previewClosingDate,
         }
       : null,
@@ -194,8 +228,19 @@ function MonthlySheetsPage() {
     !displayedSheet?.isPricedByTariff &&
     kmRate !== sheet.kmRate
 
+  const hasUnappliedBalance =
+    sheet !== undefined &&
+    !sheet.isConfirmed &&
+    openingBalance !== sheet.openingBalance
+
   const hasUnappliedClosingDate =
     sheet !== undefined && !sheet.isConfirmed && closingDate !== sheet.periodEnd
+
+  const unappliedInputs = [
+    hasUnappliedRate && 'index',
+    hasUnappliedBalance && 'opening balance',
+    hasUnappliedClosingDate && 'closing date',
+  ].filter(Boolean)
 
   const isPricingLocked = !canPriceSheet || (sheet?.isConfirmed ?? false)
 
@@ -206,6 +251,11 @@ function MonthlySheetsPage() {
 
   function editRate(text: string) {
     setRateDraft({ periodKey, text })
+    setActionError('')
+  }
+
+  function editBalance(text: string) {
+    setBalanceDraft({ periodKey, text })
     setActionError('')
   }
 
@@ -243,6 +293,7 @@ function MonthlySheetsPage() {
         year: period.year,
         month: period.month,
         kmRate,
+        openingBalance,
         periodEnd: closingDate,
       })
     }, 'Could not generate the sheet.')
@@ -327,6 +378,28 @@ function MonthlySheetsPage() {
                 onChange={(event) => editRate(event.target.value)}
               />
             </div>
+            {/* Some leads are handed the month's money up front. Leaving this empty
+                settles the month in arrears, as before. */}
+            <div className="w-[calc(50%-0.375rem)] sm:w-44">
+              <label
+                className="text-sm font-medium text-slate-700"
+                htmlFor="opening-balance"
+              >
+                Opening balance (TJS)
+              </label>
+              <Input
+                id="opening-balance"
+                className="mt-1.5 disabled:cursor-not-allowed disabled:opacity-60"
+                type="number"
+                min={0}
+                step="0.01"
+                inputMode="decimal"
+                placeholder="Paid at month end"
+                value={openingBalanceText}
+                disabled={isPricingLocked}
+                onChange={(event) => editBalance(event.target.value)}
+              />
+            </div>
             {/* Paying before the month is out settles only up to this day; the rest of
                 the month goes to the next sheet instead of being closed with this one. */}
             <div className="w-[calc(50%-0.375rem)] sm:w-44">
@@ -350,11 +423,9 @@ function MonthlySheetsPage() {
           </div>
         </CardHeader>
 
-        {!isPricingLocked && (hasUnappliedRate || hasUnappliedClosingDate) && (
+        {!isPricingLocked && unappliedInputs.length > 0 && (
           <p className="mt-4 text-sm font-medium text-amber-600">
-            {hasUnappliedRate && !hasUnappliedClosingDate
-              ? 'This index has not been applied yet — recalculate the sheet to price the month with it.'
-              : 'The closing date has not been applied yet — recalculate the sheet to settle up to it.'}
+            {`The ${unappliedInputs.join(' and ')} ${unappliedInputs.length > 1 ? 'have' : 'has'} not been applied yet — recalculate the sheet to use ${unappliedInputs.length > 1 ? 'them' : 'it'}.`}
           </p>
         )}
       </Card>
@@ -522,10 +593,23 @@ function MonthlySheetsPage() {
                   value={report.travelledDayCount}
                   icon={CalendarCheck}
                 />
-                {/* The crew is shown in the unit it is paid in and no other: a tariffed
+                {/* A lead paid in advance sees first what is left of it; the legs and
+                    kilometres stay readable in the pricing card's hint. Otherwise the
+                    crew is shown in the unit it is paid in and no other: a tariffed
                     crew's kilometres price nothing, and showing them alongside the money
                     only invites them to be added together. */}
-                {report.isPricedByTariff ? (
+                {report.openingBalance !== null && report.balance !== null ? (
+                  <StatCard
+                    label="Balance"
+                    value={formatCurrency(report.balance)}
+                    icon={PiggyBank}
+                    hint={
+                      report.balance < 0
+                        ? `Overspent ${formatCurrency(-report.balance)} of ${formatCurrency(report.openingBalance)}`
+                        : `Left of ${formatCurrency(report.openingBalance)}`
+                    }
+                  />
+                ) : report.isPricedByTariff ? (
                   <StatCard
                     label="Legs driven"
                     value={report.totalDrivenLegs}
@@ -588,6 +672,11 @@ function MonthlySheetsPage() {
                   label="Total payable"
                   value={formatCurrency(report.totalPayable)}
                   icon={BadgeCheck}
+                  hint={
+                    report.openingBalance !== null
+                      ? 'Overspend and car allowance'
+                      : undefined
+                  }
                 />
               </div>
 

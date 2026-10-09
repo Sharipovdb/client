@@ -16,6 +16,7 @@ function aDay(overrides: Partial<MonthlySheetDay> = {}): MonthlySheetDay {
     drivenKm: 40,
     extraBusinessKm: 0,
     taxiAmount: 0,
+    balance: null,
     ...overrides,
   }
 }
@@ -62,6 +63,7 @@ function aSheet(overrides: Partial<MonthlySheet> = {}): MonthlySheet {
     isPaid: false,
     paidAt: null,
     kmRate,
+    openingBalance: null,
     amortizationAmount,
     tariffPerLeg,
     isPricedByTariff,
@@ -74,6 +76,7 @@ function aSheet(overrides: Partial<MonthlySheet> = {}): MonthlySheet {
     totalTariffAmount,
     totalDrivingAmount,
     totalPayable: totalDrivingAmount + totalTaxiAmount + amortizationAmount,
+    balance: null,
     ...overrides,
     days,
   }
@@ -391,5 +394,41 @@ describe('buildMonthlyReport', () => {
       isConfirmed: true,
       isPaid: true,
     })
+  })
+
+  it('carries the opening balance and what is left of it after the month', () => {
+    const report = buildMonthlyReport(
+      aSheet({ openingBalance: 100, balance: -15, totalPayable: 15 }),
+      'Crew A',
+    )
+
+    expect(report).toMatchObject({
+      openingBalance: 100,
+      balance: -15,
+      totalPayable: 15,
+    })
+  })
+
+  it('shows on each travelled day what is left of the opening balance', () => {
+    const report = buildMonthlyReport(
+      aSheet({
+        openingBalance: 100,
+        days: [
+          aDay({ date: '2026-08-03', balance: 50 }),
+          aDay({ date: '2026-08-04', balance: -15 }),
+        ],
+      }),
+      'Crew A',
+    )
+
+    expect(cellForDate(report, '2026-08-03')?.balance).toBe(50)
+    expect(cellForDate(report, '2026-08-04')?.balance).toBe(-15)
+    expect(cellForDate(report, '2026-08-05')?.balance).toBeNull()
+  })
+
+  it('has no balance for a lead settled at the end of the month', () => {
+    const report = buildMonthlyReport(aSheet(), 'Crew A')
+
+    expect(report).toMatchObject({ openingBalance: null, balance: null })
   })
 })

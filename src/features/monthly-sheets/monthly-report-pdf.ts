@@ -129,6 +129,8 @@ function cellText(
 
   if (cell.taxiAmount > 0) lines.push(formatCurrency(cell.taxiAmount))
 
+  if (cell.balance !== null) lines.push(`Bal ${formatCurrency(cell.balance)}`)
+
   return lines.join('\n')
 }
 
@@ -249,6 +251,13 @@ function summaryLines(report: MonthlyReport): [string, string][] {
     'Taxi fares to reimburse',
     formatCurrency(report.totalTaxiAmount),
   ])
+
+  // A lead paid in advance has the trips and fares taken off what they were handed, so
+  // only an overspend is still owed to them.
+  if (report.openingBalance !== null && report.balance !== null) {
+    lines.push(['Opening balance', formatCurrency(report.openingBalance)])
+    lines.push(['Balance left', formatCurrency(report.balance)])
+  }
 
   return lines
 }

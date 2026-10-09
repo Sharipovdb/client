@@ -224,6 +224,9 @@ export interface MonthlySheetDay {
   drivenKm: number // round trip when both legs were driven
   extraBusinessKm: number
   taxiAmount: number
+  // What is left of the opening balance once this day's trips and fares are taken off
+  // it. `null` when the lead is settled at the end of the month instead.
+  balance: number | null
 }
 
 // `id` is 0 for an unsaved preview (POST /GetPreview computes but doesn't persist).
@@ -246,6 +249,9 @@ export interface MonthlySheet {
   // TJS per kilometre — the accountant's index, entered on the Monthly Sheets page and
   // saved with the sheet, so what was paid stays readable afterwards.
   kmRate: number
+  // The money handed to the lead in advance, entered next to the index. `null` means
+  // the month is settled in arrears, exactly as before advances existed.
+  openingBalance: number | null
   // The month's allowance for the lead's own car, frozen from the vehicle's
   // amortization basis when the sheet was built. 0 for a manager-led crew.
   amortizationAmount: number
@@ -266,5 +272,8 @@ export interface MonthlySheet {
   totalTariffAmount: number
   // What the crew's own driving is worth, whichever way it was priced.
   totalDrivingAmount: number
+  // With an opening balance, only the overspend and the car allowance are left to pay.
   totalPayable: number
+  // The opening balance less the month's trips and fares; negative once overspent.
+  balance: number | null
 }

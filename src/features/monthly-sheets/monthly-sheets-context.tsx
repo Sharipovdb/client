@@ -15,6 +15,7 @@ interface MonthlySheetDayApiDto {
   drivenKm: number
   extraBusinessKm: number
   taxiAmount: number
+  balance: number | null
 }
 
 interface MonthlySheetApiDto {
@@ -30,6 +31,7 @@ interface MonthlySheetApiDto {
   isPaid: boolean
   paidAt: string | null
   kmRate: number
+  openingBalance: number | null
   amortizationAmount: number
   tariffPerLeg: number
   isPricedByTariff: boolean
@@ -43,6 +45,7 @@ interface MonthlySheetApiDto {
   totalTariffAmount: number
   totalDrivingAmount: number
   totalPayable: number
+  balance: number | null
 }
 
 interface PaginatedResult<T> {
@@ -74,6 +77,11 @@ export interface SheetPeriod {
  */
 export interface PricedSheetPeriod extends SheetPeriod {
   kmRate: number
+  /**
+   * What the lead was handed at the start of the month. `null` settles the month in
+   * arrears; a number has each day's trips and fares taken off it instead.
+   */
+  openingBalance: number | null
   /**
    * The day the accountant is closing on, as ISO yyyy-mm-dd. `null` settles the whole
    * month. An earlier date settles a short period and leaves the remaining days to the

@@ -23,6 +23,8 @@ export interface ReportDay {
   drivenKm: number
   extraBusinessKm: number
   taxiAmount: number
+  /** What is left of the opening balance after this day; `null` without one. */
+  balance: number | null
 }
 
 /** `null` pads the leading and trailing cells of a week that fall outside the period. */
@@ -57,6 +59,10 @@ export interface MonthlyReport {
   amortizationAmount: number
   /** Kilometres, fares and the car allowance as the one amount the lead is handed. */
   totalPayable: number
+  /** Money the lead was handed in advance; `null` when the month is settled in arrears. */
+  openingBalance: number | null
+  /** The opening balance less the month's trips and fares. Negative once overspent. */
+  balance: number | null
 }
 
 const daysPerWeek = 7
@@ -99,6 +105,7 @@ function emptyDay(date: string): ReportDay {
     drivenKm: 0,
     extraBusinessKm: 0,
     taxiAmount: 0,
+    balance: null,
   }
 }
 
@@ -137,6 +144,7 @@ export function buildMonthlyReport(
         drivenKm: day.drivenKm,
         extraBusinessKm: day.extraBusinessKm,
         taxiAmount: day.taxiAmount,
+        balance: day.balance,
       },
     ]),
   )
@@ -165,6 +173,8 @@ export function buildMonthlyReport(
     totalDrivingAmount: sheet.totalDrivingAmount,
     amortizationAmount: sheet.amortizationAmount,
     totalPayable: sheet.totalPayable,
+    openingBalance: sheet.openingBalance,
+    balance: sheet.balance,
   }
 }
 
