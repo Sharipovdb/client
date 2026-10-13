@@ -34,6 +34,8 @@ import { Select } from '@/components/ui/select'
 import { StatCard } from '@/components/ui/stat-card'
 import { usePermissions } from '@/features/auth/use-permissions'
 import { useCrews } from '@/features/crews/crews-context'
+import { BusinessTripList } from '@/features/monthly-sheets/business-trip-list'
+import { businessTripsOf } from '@/features/monthly-sheets/business-trips'
 import { MonthGrid } from '@/features/monthly-sheets/month-grid'
 import { buildMonthlyReport } from '@/features/monthly-sheets/monthly-report'
 import {
@@ -215,6 +217,10 @@ function MonthlySheetsPage() {
         : null,
     [displayedSheet, getCrewName],
   )
+
+  const businessTrips = displayedSheet
+    ? businessTripsOf(displayedSheet.days)
+    : []
 
   // Generating a month the crew neither drove nor paid for is refused server-side, so
   // the button only appears once there is something to save.
@@ -687,7 +693,12 @@ function MonthlySheetsPage() {
                   No travel logged for this crew in this period.
                 </p>
               ) : (
-                <MonthGrid report={report} />
+                <>
+                  <MonthGrid report={report} />
+                  {businessTrips.length > 0 && (
+                    <BusinessTripList trips={businessTrips} />
+                  )}
+                </>
               )}
             </div>
           )}

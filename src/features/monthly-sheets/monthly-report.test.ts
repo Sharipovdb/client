@@ -15,6 +15,7 @@ function aDay(overrides: Partial<MonthlySheetDay> = {}): MonthlySheetDay {
     drivenLegCount: 2,
     drivenKm: 40,
     extraBusinessKm: 0,
+    notes: '',
     taxiAmount: 0,
     balance: null,
     ...overrides,

@@ -160,7 +160,7 @@ export interface TransportDay {
   commuteKmPerLeg: number
   drivenKm: number
   extraBusinessKm: number // km driven for company purposes beyond the commute
-  notes: string | null
+  notes: string | null // where those km were driven; required once there are any
   loggedBy: number
   loggedAt: string
   // Every taxi leg carries its fare — recorded here, in the daily log, so a ride can
@@ -223,6 +223,7 @@ export interface MonthlySheetDay {
   drivenLegCount: number // 0, 1 or 2 — what a tariff is charged per
   drivenKm: number // round trip when both legs were driven
   extraBusinessKm: number
+  notes: string // where the business kilometres were driven
   taxiAmount: number
   // What is left of the opening balance once this day's trips and fares are taken off
   // it. `null` when the lead is settled at the end of the month instead.

@@ -104,6 +104,14 @@ const dayFormSchema = z
       })
     }
 
+    if (values.extraBusinessKm > 0 && !values.notes.trim()) {
+      context.addIssue({
+        code: 'custom',
+        path: ['notes'],
+        message: 'Say where the extra business km were driven.',
+      })
+    }
+
     for (const leg of legFields) {
       if (values[leg.mode] !== 'Taxi') {
         continue
@@ -524,11 +532,15 @@ function TransportDaysPage() {
               />
             </Field>
 
-            <Field label="Notes" htmlFor="notes" error={errors.notes?.message}>
+            <Field
+              label="Business trip notes"
+              htmlFor="notes"
+              error={errors.notes?.message}
+            >
               <Textarea
                 id="notes"
                 rows={3}
-                placeholder="Optional context for this day"
+                placeholder="Where the extra business km were driven — required when there are any"
                 {...register('notes')}
               />
             </Field>
@@ -649,6 +661,14 @@ function TransportDaysPage() {
                         formatKm(day.extraBusinessKm)
                       ) : (
                         <span className="text-slate-300">—</span>
+                      )}
+                      {day.notes && (
+                        <p
+                          className="ml-auto mt-0.5 max-w-48 truncate text-xs text-slate-500"
+                          title={day.notes}
+                        >
+                          {day.notes}
+                        </p>
                       )}
                     </TableCell>
                     <TableCell>

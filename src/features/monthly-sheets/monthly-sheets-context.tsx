@@ -14,6 +14,7 @@ interface MonthlySheetDayApiDto {
   drivenLegCount: number
   drivenKm: number
   extraBusinessKm: number
+  notes: string
   taxiAmount: number
   balance: number | null
 }
