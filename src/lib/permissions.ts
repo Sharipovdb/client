@@ -134,6 +134,10 @@ export type Capability =
   | 'updateTariff'
   | 'deleteTariff'
 
+  // People. Anyone can change their own password; setting a new one for someone who
+  // forgot theirs is the admin's, as on the backend's ResetPassword.
+  | 'resetPassword'
+
 const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
   Admin: [
     'createTransportDay',
@@ -160,6 +164,8 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'deleteSheet',
     'paySheet',
     'printSheet',
+
+    'resetPassword',
   ],
   RouteManager: [
     'createRoute',

@@ -142,4 +142,10 @@ describe('capabilities', () => {
     expect(hasCapability([...worker], 'viewFinance')).toBe(false)
     expect(hasCapability([...worker], 'paySheet')).toBe(false)
   })
+
+  it('only an admin resets the password of someone else', () => {
+    expect(hasCapability([...admin], 'resetPassword')).toBe(true)
+    expect(hasCapability([...routeManager], 'resetPassword')).toBe(false)
+    expect(hasCapability([...accountant], 'resetPassword')).toBe(false)
+  })
 })

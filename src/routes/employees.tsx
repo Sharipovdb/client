@@ -1,6 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createFileRoute } from '@tanstack/react-router'
-import { Briefcase, PencilLine, Plus, Trash2, Users } from 'lucide-react'
+import {
+  Briefcase,
+  KeyRound,
+  PencilLine,
+  Plus,
+  Trash2,
+  Users,
+} from 'lucide-react'
 import { useEffect, useState, useMemo } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
@@ -26,9 +33,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { PasswordDialog } from '@/features/account/password-dialog'
 import { useEmployees } from '@/features/employees/employees-context'
 import type { EmployeeDraft } from '@/features/employees/employees-context'
 import { getErrorMessage } from '@/lib/api-error'
+import { passwordSchema } from '@/lib/password-rules'
+import { useCapability } from '@/lib/use-capability'
 import {
   employeeRoleLabels,
   employeeRolesAdd,
@@ -60,22 +70,7 @@ const employeeFormSchema = z.object({
     .string()
     .trim()
     .min(2, 'Full name must contain at least 2 characters.'),
-  password: z
-    .string()
-    .min(6, { message: 'Passwords must be at least 6 characters' })
-    .regex(/[^a-zA-Z0-9]/, {
-      message: 'Passwords must have at least one non alphanumeric character',
-    })
-    .regex(/[a-z]/, {
-      message: "Passwords must have at least one lowercase ('a'-'z')",
-    })
-    .regex(/[A-Z]/, {
-      message: "Passwords must have at least one uppercase ('A'-'Z')",
-    })
-    .regex(/\d/, {
-      message: "Passwords must have at least one digit ('0'-'9')",
-    })
-    .optional(),
+  password: passwordSchema.optional(),
   phoneNumber: z
     .string()
     .trim()
@@ -113,8 +108,15 @@ const roleBadgeVariant: Record<
 }
 
 function EmployeesPage() {
-  const { employees, isLoading, addEmployee, updateEmployee, deleteEmployee } =
-    useEmployees()
+  const {
+    employees,
+    isLoading,
+    addEmployee,
+    updateEmployee,
+    deleteEmployee,
+    resetPassword,
+  } = useEmployees()
+  const canResetPassword = useCapability('resetPassword')
   const [editingEmployeeId, setEditingEmployeeId] = useState<number | null>(
     null,
   )
@@ -122,6 +124,12 @@ function EmployeesPage() {
   const [formError, setFormError] = useState('')
   const [deletingEmployeeId, setDeletingEmployeeId] = useState<number | null>(
     null,
+  )
+  const [resettingEmployeeId, setResettingEmployeeId] = useState<number | null>(
+    null,
+  )
+  const resettingEmployee = employees.find(
+    (employee) => employee.id === resettingEmployeeId,
   )
 
   const filteredEmployees = useMemo(() => {
@@ -445,6 +453,18 @@ function EmployeesPage() {
                       >
                         <PencilLine className="size-4" />
                       </Button>
+                      {canResetPassword && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="rounded-full border-sky-100 text-sky-700"
+                          title="Reset password"
+                          onClick={() => setResettingEmployeeId(employee.id)}
+                        >
+                          <KeyRound className="size-4" />
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         variant="destructive"
@@ -482,6 +502,22 @@ function EmployeesPage() {
         onConfirm={() => {
           if (deletingEmployeeId !== null) {
             removeEmployee(deletingEmployeeId)
+          }
+        }}
+      />
+
+      {/* Only the password changes: the employee keeps their id, profile, roles and
+          everything logged under them, and is signed out everywhere. */}
+      <PasswordDialog
+        open={resettingEmployee !== undefined}
+        onOpenChange={(open) => !open && setResettingEmployeeId(null)}
+        title={`Reset the password of ${resettingEmployee?.fullname ?? 'this employee'}`}
+        description="Pass the new password on to them. They will be signed out of every device and sign in again with it."
+        submitLabel="Reset password"
+        askCurrentPassword={false}
+        onSubmit={async ({ newPassword }) => {
+          if (resettingEmployee) {
+            await resetPassword(resettingEmployee.id, newPassword)
           }
         }}
       />

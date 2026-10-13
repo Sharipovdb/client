@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 
 import { apiClient } from '@/lib/api-client'
 import type { ApiResponse } from '@/lib/api-client'
+import { ensureSucceeded } from '@/lib/api-response'
 // import { appRoleToBackendRole, resolveAppRole } from '@/lib/app-types'
 import { isSameId } from '@/lib/domain-types'
 import type { Employee, EntityId } from '@/lib/domain-types'
@@ -88,6 +89,7 @@ interface EmployeesContextValue {
   addEmployee: (draft: EmployeeDraft) => Promise<void>
   updateEmployee: (employeeId: number, draft: EmployeeDraft) => Promise<void>
   deleteEmployee: (employeeId: number) => Promise<void>
+  resetPassword: (employeeId: number, newPassword: string) => Promise<void>
   getEmployeeById: (
     employeeId: EntityId | null | undefined,
   ) => Employee | undefined
@@ -185,6 +187,24 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
     onSuccess: invalidate,
   })
 
+  // Nothing about the employee changes on screen, so there is nothing to refetch.
+  const resetPasswordMutation = useMutation({
+    mutationFn: async ({
+      employeeId,
+      newPassword,
+    }: {
+      employeeId: number
+      newPassword: string
+    }) => {
+      const response = await apiClient.put<ApiResponse<null>>(
+        `/api/User/ResetPassword/${employeeId}`,
+        { newPassword },
+      )
+
+      ensureSucceeded(response.data, 'Could not reset the password.')
+    },
+  })
+
   const value = useMemo<EmployeesContextValue>(
     () => ({
       employees,
@@ -198,6 +218,9 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
       deleteEmployee: async (employeeId) => {
         await deleteMutation.mutateAsync(employeeId)
       },
+      resetPassword: async (employeeId, newPassword) => {
+        await resetPasswordMutation.mutateAsync({ employeeId, newPassword })
+      },
       getEmployeeById: (employeeId) =>
         employees.find((employee) => isSameId(employee.id, employeeId)),
       getEmployeeDisplayName: (employeeId) => {
@@ -208,7 +231,14 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
         return employee ? employee.fullname : 'Unknown'
       },
     }),
-    [employees, isLoading, addMutation, updateMutation, deleteMutation],
+    [
+      employees,
+      isLoading,
+      addMutation,
+      updateMutation,
+      deleteMutation,
+      resetPasswordMutation,
+    ],
   )
 
   return (

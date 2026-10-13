@@ -3,6 +3,7 @@ import {
   Bell,
   ChevronDown,
   ChevronLeft,
+  KeyRound,
   LogOut,
   Menu,
   UserRound,
@@ -12,6 +13,8 @@ import type { ReactNode } from 'react'
 
 import { getNavigationItemsForRole, getPageTitle } from '@/app/navigation'
 import { Button } from '@/components/ui/button'
+import { changeOwnPassword } from '@/features/account/change-own-password'
+import { PasswordDialog } from '@/features/account/password-dialog'
 import { useAuth } from '@/features/auth/auth-context'
 import { roleLabels } from '@/lib/app-types'
 import { cn } from '@/lib/utils'
@@ -40,6 +43,7 @@ export function AppShell({ children }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [changingPassword, setChangingPassword] = useState(false)
 
   const visibleItems = session ? getNavigationItemsForRole(session.roles) : []
 
@@ -137,6 +141,18 @@ export function AppShell({ children }: AppShellProps) {
                         className="mt-4 h-11 w-full rounded-2xl border-sky-100 text-sky-700"
                         onClick={() => {
                           setProfileMenuOpen(false)
+                          setChangingPassword(true)
+                        }}
+                      >
+                        <KeyRound className="size-4" />
+                        Change password
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="mt-2 h-11 w-full rounded-2xl border-sky-100 text-sky-700"
+                        onClick={() => {
+                          setProfileMenuOpen(false)
                           logout()
                         }}
                       >
@@ -151,6 +167,18 @@ export function AppShell({ children }: AppShellProps) {
           </div>
         </div>
       </header>
+
+      <PasswordDialog
+        open={changingPassword}
+        onOpenChange={setChangingPassword}
+        title="Change your password"
+        description="You stay signed in on this device."
+        submitLabel="Change password"
+        askCurrentPassword
+        onSubmit={({ currentPassword, newPassword }) =>
+          changeOwnPassword(currentPassword, newPassword)
+        }
+      />
 
       <div className={cn('flex', belowHeaderMinHeight)}>
         <aside
