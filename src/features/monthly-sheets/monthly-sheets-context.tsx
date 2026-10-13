@@ -185,7 +185,7 @@ export function MonthlySheetsProvider({ children }: { children: ReactNode }) {
   })
 
   // Confirming is reversible right up to payment, so the month can be reopened, fixed
-  // and recalculated instead of being deleted and rebuilt from scratch.
+  // and confirmed again instead of being deleted and rebuilt from scratch.
   const unconfirmMutation = useMutation({
     mutationFn: (sheetId: number) =>
       apiClient.put(`/api/MonthlyTransportSheets/Unconfirm/${sheetId}`),

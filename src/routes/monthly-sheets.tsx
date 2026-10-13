@@ -9,6 +9,7 @@ import {
   Loader2,
   PiggyBank,
   RefreshCw,
+  Save,
   Sparkles,
   Trash2,
   Undo2,
@@ -219,9 +220,10 @@ function MonthlySheetsPage() {
   // the button only appears once there is something to save.
   const hasSomethingToSave = (displayedSheet?.days.length ?? 0) > 0
 
-  // A saved sheet keeps showing the money it was priced with until it is recalculated,
-  // so a typed index that has not been applied yet has to say so out loud — otherwise
-  // the totals below silently disagree with the box above them.
+  // A draft follows the transport log on its own, but it keeps the index, balance and
+  // closing date it was saved with until it is saved again, so a typed value that has
+  // not been applied yet has to say so out loud — otherwise the totals below silently
+  // disagree with the box above them.
   const hasUnappliedRate =
     sheet !== undefined &&
     !sheet.isConfirmed &&
@@ -241,6 +243,8 @@ function MonthlySheetsPage() {
     hasUnappliedBalance && 'opening balance',
     hasUnappliedClosingDate && 'closing date',
   ].filter(Boolean)
+
+  const needsSaving = sheet === undefined || unappliedInputs.length > 0
 
   const isPricingLocked = !canPriceSheet || (sheet?.isConfirmed ?? false)
 
@@ -425,7 +429,7 @@ function MonthlySheetsPage() {
 
         {!isPricingLocked && unappliedInputs.length > 0 && (
           <p className="mt-4 text-sm font-medium text-amber-600">
-            {`The ${unappliedInputs.join(' and ')} ${unappliedInputs.length > 1 ? 'have' : 'has'} not been applied yet — recalculate the sheet to use ${unappliedInputs.length > 1 ? 'them' : 'it'}.`}
+            {`The ${unappliedInputs.join(' and ')} ${unappliedInputs.length > 1 ? 'have' : 'has'} not been applied yet — save the sheet to use ${unappliedInputs.length > 1 ? 'them' : 'it'}.`}
           </p>
         )}
       </Card>
@@ -478,26 +482,24 @@ function MonthlySheetsPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {/* Days keep being logged and confirmed after a sheet is first produced,
-                  so a draft can be recomputed in place to pick them up. */}
-              {(!sheet || !sheet.isConfirmed) &&
-                hasSomethingToSave &&
-                can('generateSheet') && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="rounded-full bg-sky-600 text-white hover:bg-sky-700"
-                    disabled={isBusy}
-                    onClick={handleGenerate}
-                  >
-                    {sheet ? (
-                      <RefreshCw className="size-3.5" />
-                    ) : (
-                      <Sparkles className="size-3.5" />
-                    )}
-                    {sheet ? 'Recalculate' : 'Generate & Save'}
-                  </Button>
-                )}
+              {/* A draft picks up newly logged days by itself, so a saved one only
+                  needs saving again when the accountant changed what they typed. */}
+              {needsSaving && hasSomethingToSave && can('generateSheet') && (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="rounded-full bg-sky-600 text-white hover:bg-sky-700"
+                  disabled={isBusy}
+                  onClick={handleGenerate}
+                >
+                  {sheet ? (
+                    <Save className="size-3.5" />
+                  ) : (
+                    <Sparkles className="size-3.5" />
+                  )}
+                  {sheet ? 'Save' : 'Generate & Save'}
+                </Button>
+              )}
 
               {sheet && !sheet.isConfirmed && can('confirmSheet') && (
                 <Button
@@ -513,8 +515,8 @@ function MonthlySheetsPage() {
               )}
 
               {/* Confirming only freezes the figures, so it can be taken back while the
-                  month is still unpaid — the sheet returns to draft and can be
-                  recalculated. Paying is what closes it for good. */}
+                  month is still unpaid — the sheet returns to draft and follows the
+                  transport log again. Paying is what closes it for good. */}
               {sheet &&
                 !sheet.isPaid &&
                 sheet.isConfirmed &&
