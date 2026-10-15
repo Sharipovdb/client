@@ -6,7 +6,6 @@ import {
   KeyRound,
   LogOut,
   Menu,
-  Monitor,
   Moon,
   Sun,
   UserRound,
@@ -58,7 +57,6 @@ const themeOptions: {
 }[] = [
   { value: 'light', label: 'Light', icon: Sun },
   { value: 'dark', label: 'Dark', icon: Moon },
-  { value: 'system', label: 'System', icon: Monitor },
 ]
 
 export function AppShell({ children }: AppShellProps) {

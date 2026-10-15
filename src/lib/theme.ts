@@ -2,40 +2,27 @@ import { useState } from 'react'
 
 import { readStorageValue, writeStorageValue } from './local-storage'
 
-export type ThemePreference = 'light' | 'dark' | 'system'
+export type ThemePreference = 'light' | 'dark'
 
-const themePreferences: ThemePreference[] = ['light', 'dark', 'system']
+const themePreferences: ThemePreference[] = ['light', 'dark']
 
 // The inline script in index.html reads this key too, so the first paint already has
 // the right theme — keep the two in step.
 const THEME_STORAGE_KEY = 'srp-transport.theme'
 
-const darkSchemeQuery = '(prefers-color-scheme: dark)'
-
+// Light unless the user picks dark. The OS setting is deliberately ignored: a dark OS
+// should not switch the app on its own.
 function readThemePreference(): ThemePreference {
-  const stored = readStorageValue<unknown>(THEME_STORAGE_KEY, 'system')
-  return (
-    themePreferences.find((preference) => preference === stored) ?? 'system'
-  )
+  const stored = readStorageValue<unknown>(THEME_STORAGE_KEY, 'light')
+  return themePreferences.find((preference) => preference === stored) ?? 'light'
 }
 
 function applyThemePreference(preference: ThemePreference) {
-  const dark =
-    preference === 'dark' ||
-    (preference === 'system' && window.matchMedia(darkSchemeQuery).matches)
-
-  document.documentElement.classList.toggle('dark', dark)
+  document.documentElement.classList.toggle('dark', preference === 'dark')
 }
 
-/** Applies the stored theme and keeps "system" following the OS while the app runs. */
 export function initTheme() {
   applyThemePreference(readThemePreference())
-
-  window
-    .matchMedia(darkSchemeQuery)
-    .addEventListener('change', () =>
-      applyThemePreference(readThemePreference()),
-    )
 }
 
 export function useThemePreference() {
