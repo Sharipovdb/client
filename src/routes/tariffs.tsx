@@ -13,7 +13,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardEyebrow,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -157,13 +156,12 @@ function TariffsPage() {
         <Card>
           <CardHeader className="flex-row items-start justify-between gap-4">
             <div>
-              <CardEyebrow>Tariffs</CardEyebrow>
-              <CardTitle className="mt-2">
+              <CardTitle>
                 {editingTariff ? 'Edit Tariff' : 'Add Tariff'}
               </CardTitle>
             </div>
 
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
               <Coins className="size-5" />
             </div>
           </CardHeader>
@@ -195,7 +193,7 @@ function TariffsPage() {
             <div className="flex flex-wrap gap-3 pt-2">
               <Button
                 type="submit"
-                className="h-11 rounded-2xl bg-sky-600 px-5 text-white hover:bg-sky-700"
+                className="h-11 rounded-2xl px-5"
                 disabled={isSubmitting}
               >
                 {editingTariff ? (
@@ -209,7 +207,7 @@ function TariffsPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 rounded-2xl border-sky-100 px-5 text-slate-700"
+                className="h-11 rounded-2xl border-border px-5 text-soft-foreground"
                 onClick={resetForm}
               >
                 Clear Form
@@ -217,17 +215,16 @@ function TariffsPage() {
             </div>
 
             {formError && (
-              <p className="text-xs font-medium text-red-500">{formError}</p>
+              <p className="text-xs font-medium text-destructive">{formError}</p>
             )}
           </form>
         </Card>
       )}
 
       <Card>
-        <CardHeader className="flex-col gap-4 border-b border-sky-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <CardHeader className="flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardEyebrow>Tariffs list</CardEyebrow>
-            <CardTitle className="mt-2">Prices per trip</CardTitle>
+            <CardTitle>Prices per trip</CardTitle>
             <CardDescription className="mt-2">
               {isLoading ? 'Loading…' : `${tariffs.length} tariffs available.`}
             </CardDescription>
@@ -253,20 +250,20 @@ function TariffsPage() {
 
                 return (
                   <TableRow key={tariff.id}>
-                    <TableCell className="font-medium text-slate-900">
+                    <TableCell className="font-medium text-foreground">
                       {tariff.name}
                     </TableCell>
-                    <TableCell className="text-right font-semibold text-slate-900">
+                    <TableCell className="text-right font-semibold text-foreground">
                       {formatCurrency(tariff.amountPerLeg)}
                     </TableCell>
                     {/* The everyday case spelled out, so nobody has to double it in
                         their head to sanity-check a sheet. */}
-                    <TableCell className="text-right text-slate-500">
+                    <TableCell className="text-right text-muted-foreground">
                       {formatCurrency(tariff.amountPerLeg * 2)}
                     </TableCell>
                     <TableCell>
                       {usedBy.length === 0 ? (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-faint-foreground">—</span>
                       ) : (
                         <div className="flex flex-wrap gap-1.5">
                           {usedBy.map((crewName) => (
@@ -285,7 +282,8 @@ function TariffsPage() {
                               type="button"
                               variant="outline"
                               size="icon"
-                              className="rounded-full border-sky-100 text-sky-700"
+                              className="rounded-full border-border text-accent-foreground"
+                              title="Edit tariff"
                               onClick={() => setEditingTariffId(tariff.id)}
                             >
                               <PencilLine className="size-4" />
@@ -297,6 +295,7 @@ function TariffsPage() {
                               variant="destructive"
                               size="icon"
                               className="rounded-full"
+                              title="Delete tariff"
                               disabled={usedBy.length > 0}
                               onClick={() => setDeletingTariffId(tariff.id)}
                             >
@@ -314,7 +313,7 @@ function TariffsPage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="py-10 text-center text-slate-400"
+                    className="py-10 text-center text-faint-foreground"
                   >
                     No tariffs yet — every crew is priced by the kilometre.
                   </TableCell>
@@ -350,11 +349,11 @@ interface FieldProps {
 function Field({ label, htmlFor, error, children }: FieldProps) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={htmlFor}>
+      <label className="text-sm font-medium text-soft-foreground" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
-      {error && <p className="text-xs font-medium text-red-500">{error}</p>}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
     </div>
   )
 }

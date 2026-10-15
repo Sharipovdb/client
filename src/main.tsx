@@ -3,7 +3,10 @@ import { RouterProvider } from '@tanstack/react-router'
 
 import { AppProvider } from '@/app/app-provider'
 import { AppQueryClientProvider } from '@/app/query-client'
+import { initTheme } from '@/lib/theme'
 import { getRouter } from '@/router'
+
+initTheme()
 
 const router = getRouter()
 

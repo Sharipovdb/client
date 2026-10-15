@@ -30,7 +30,7 @@ export function MonthGrid({ report }: { report: MonthlyReport }) {
         {weekdays.map((weekday) => (
           <div
             key={weekday}
-            className="px-2 py-1 text-center text-xs font-semibold uppercase tracking-wide text-slate-400"
+            className="px-2 py-1 text-center text-xs font-semibold uppercase tracking-wide text-faint-foreground"
           >
             {weekday}
           </div>
@@ -44,15 +44,15 @@ export function MonthGrid({ report }: { report: MonthlyReport }) {
               key={day.date}
               className={
                 hasTravel(day)
-                  ? 'min-h-16 rounded-xl border border-sky-200 bg-sky-50 px-2 py-1.5'
-                  : 'min-h-16 rounded-xl border border-slate-100 px-2 py-1.5'
+                  ? 'min-h-16 rounded-xl border border-border-strong bg-muted px-2 py-1.5'
+                  : 'min-h-16 rounded-xl border border-border px-2 py-1.5'
               }
             >
               <span
                 className={
                   hasTravel(day)
-                    ? 'text-xs font-semibold text-slate-900'
-                    : 'text-xs text-slate-300'
+                    ? 'text-xs font-semibold text-foreground'
+                    : 'text-xs text-faint-foreground'
                 }
               >
                 {cellLabel(day)}
@@ -61,10 +61,10 @@ export function MonthGrid({ report }: { report: MonthlyReport }) {
               {report.isPricedByTariff ? (
                 day.drivenLegCount > 0 && (
                   <>
-                    <p className="mt-0.5 text-xs font-medium text-slate-700">
+                    <p className="mt-0.5 text-xs font-medium text-soft-foreground">
                       {day.drivenLegCount === 2 ? '2 legs' : '1 leg'}
                     </p>
-                    <p className="text-xs text-sky-700">
+                    <p className="text-xs text-accent-foreground">
                       {formatCurrency(day.drivenLegCount * report.tariffPerLeg)}
                     </p>
                   </>
@@ -72,19 +72,19 @@ export function MonthGrid({ report }: { report: MonthlyReport }) {
               ) : (
                 <>
                   {day.drivenKm > 0 && (
-                    <p className="mt-0.5 text-xs font-medium text-slate-700">
+                    <p className="mt-0.5 text-xs font-medium text-soft-foreground">
                       {formatKm(day.drivenKm)}
                     </p>
                   )}
                   {day.extraBusinessKm > 0 && (
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       +{formatKm(day.extraBusinessKm)}
                     </p>
                   )}
                 </>
               )}
               {day.taxiAmount > 0 && (
-                <p className="mt-0.5 text-xs font-medium text-amber-700">
+                <p className="mt-0.5 text-xs font-medium text-warning">
                   {formatCurrency(day.taxiAmount)}
                 </p>
               )}
@@ -92,8 +92,8 @@ export function MonthGrid({ report }: { report: MonthlyReport }) {
                 <p
                   className={
                     day.balance < 0
-                      ? 'mt-0.5 text-xs font-semibold text-red-600'
-                      : 'mt-0.5 text-xs font-semibold text-emerald-700'
+                      ? 'mt-0.5 text-xs font-semibold text-destructive'
+                      : 'mt-0.5 text-xs font-semibold text-success'
                   }
                 >
                   {formatCurrency(day.balance)}

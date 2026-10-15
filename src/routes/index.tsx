@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { useMemo } from 'react'
 
-import { Card, CardEyebrow, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatCard } from '@/components/ui/stat-card'
 import {
   Table,
@@ -179,7 +179,7 @@ function DashboardPage() {
 
   return (
     <section className="space-y-6">
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-muted-foreground">
         Overview for {formatMonthLabel(period.year, period.month)}
       </p>
 
@@ -197,9 +197,8 @@ function DashboardPage() {
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
-          <CardHeader className="border-b border-sky-100 pb-5">
-            <CardEyebrow>Crews</CardEyebrow>
-            <CardTitle className="mt-2">This month by crew</CardTitle>
+          <CardHeader className="border-b border-border pb-5">
+            <CardTitle>This month by crew</CardTitle>
           </CardHeader>
 
           <div className="mt-4">
@@ -231,14 +230,14 @@ function DashboardPage() {
 
                     return (
                       <TableRow key={crew.id}>
-                        <TableCell className="font-medium text-slate-900">
+                        <TableCell className="font-medium text-foreground">
                           {crew.name}
                         </TableCell>
                         <TableCell className="text-center">
                           <span
                             className={
                               overflow
-                                ? 'font-semibold text-amber-600'
+                                ? 'font-semibold text-warning'
                                 : undefined
                             }
                           >
@@ -265,7 +264,7 @@ function DashboardPage() {
                   <TableRow>
                     <TableCell
                       colSpan={crewColumnCount}
-                      className="py-10 text-center text-slate-400"
+                      className="py-10 text-center text-faint-foreground"
                     >
                       No crews yet.
                     </TableCell>
@@ -278,8 +277,7 @@ function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardEyebrow>Needs attention</CardEyebrow>
-            <CardTitle className="mt-2">Pending actions</CardTitle>
+            <CardTitle>Pending actions</CardTitle>
           </CardHeader>
 
           <div className="mt-5 space-y-3">
@@ -287,17 +285,17 @@ function DashboardPage() {
               <Link
                 key={action.text}
                 to={action.to}
-                className="flex items-start gap-3 rounded-2xl border border-sky-100 bg-sky-50/40 px-4 py-3 transition hover:border-sky-200 hover:bg-sky-50"
+                className="flex items-start gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 transition hover:border-border-strong hover:bg-muted"
               >
                 <action.icon
                   className={`mt-0.5 size-4 shrink-0 ${toneClasses[action.tone]}`}
                 />
-                <span className="text-sm text-slate-700">{action.text}</span>
+                <span className="text-sm text-soft-foreground">{action.text}</span>
               </Link>
             ))}
 
             {pendingActions.length === 0 && (
-              <p className="rounded-2xl border border-dashed border-sky-200 px-4 py-8 text-center text-sm text-slate-400">
+              <p className="rounded-2xl border border-dashed border-border-strong px-4 py-8 text-center text-sm text-faint-foreground">
                 All caught up — nothing needs attention.
               </p>
             )}
@@ -311,9 +309,9 @@ function DashboardPage() {
 type ActionTone = 'default' | 'warning' | 'destructive'
 
 const toneClasses: Record<ActionTone, string> = {
-  default: 'text-sky-600',
-  warning: 'text-amber-600',
-  destructive: 'text-red-600',
+  default: 'text-primary',
+  warning: 'text-warning',
+  destructive: 'text-destructive',
 }
 
 interface PendingAction {

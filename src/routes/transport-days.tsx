@@ -15,7 +15,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   Card,
   CardDescription,
-  CardEyebrow,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -392,13 +391,12 @@ function TransportDaysPage() {
         <Card>
           <CardHeader className="flex-row items-start justify-between gap-4">
             <div>
-              <CardEyebrow>Daily Log</CardEyebrow>
-              <CardTitle className="mt-2">
+              <CardTitle>
                 {editingDay ? 'Edit Transport Day' : 'Log Transport Day'}
               </CardTitle>
             </div>
 
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
               <RouteIcon className="size-5" />
             </div>
           </CardHeader>
@@ -446,7 +444,7 @@ function TransportDaysPage() {
 
             {isRangeSelected && (
               <label
-                className="flex items-center gap-3 text-sm font-medium text-slate-700"
+                className="flex items-center gap-3 text-sm font-medium text-soft-foreground"
                 htmlFor="skipWeekends"
               >
                 <Controller
@@ -546,13 +544,13 @@ function TransportDaysPage() {
             </Field>
 
             {formError && (
-              <p className="text-xs font-medium text-red-500">{formError}</p>
+              <p className="text-xs font-medium text-destructive">{formError}</p>
             )}
 
             <div className="flex flex-wrap gap-3 pt-2">
               <Button
                 type="submit"
-                className="h-11 rounded-2xl bg-sky-600 px-5 text-white hover:bg-sky-700"
+                className="h-11 rounded-2xl px-5"
                 disabled={isSubmitting}
               >
                 {editingDay ? (
@@ -570,7 +568,7 @@ function TransportDaysPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 rounded-2xl border-sky-100 px-5 text-slate-700"
+                className="h-11 rounded-2xl border-border px-5 text-soft-foreground"
                 onClick={resetForm}
               >
                 Clear Form
@@ -581,10 +579,9 @@ function TransportDaysPage() {
       )}
 
       <Card>
-        <CardHeader className="flex-col gap-4 border-b border-sky-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <CardHeader className="flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardEyebrow>Transport days</CardEyebrow>
-            <CardTitle className="mt-2">
+            <CardTitle>
               {formatMonthLabel(period.year, period.month)}
             </CardTitle>
             <CardDescription className="mt-2">
@@ -632,7 +629,7 @@ function TransportDaysPage() {
 
                 return (
                   <TableRow key={day.id}>
-                    <TableCell className="font-medium text-slate-900">
+                    <TableCell className="font-medium text-foreground">
                       {formatDayLabel(day.date)}
                     </TableCell>
                     <TableCell>{getCrewName(day.crewId)}</TableCell>
@@ -653,18 +650,18 @@ function TransportDaysPage() {
                       {day.drivenKm > 0 ? (
                         formatKm(day.drivenKm)
                       ) : (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-faint-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
                       {day.extraBusinessKm > 0 ? (
                         formatKm(day.extraBusinessKm)
                       ) : (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-faint-foreground">—</span>
                       )}
                       {day.notes && (
                         <p
-                          className="ml-auto mt-0.5 max-w-48 truncate text-xs text-slate-500"
+                          className="ml-auto mt-0.5 max-w-48 truncate text-xs text-muted-foreground"
                           title={day.notes}
                         >
                           {day.notes}
@@ -673,7 +670,7 @@ function TransportDaysPage() {
                     </TableCell>
                     <TableCell>
                       {day.taxiFares.length === 0 ? (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-faint-foreground">—</span>
                       ) : (
                         <div className="space-y-1">
                           {day.taxiFares.map((fare) => (
@@ -681,10 +678,10 @@ function TransportDaysPage() {
                               key={fare.id}
                               className="flex items-center gap-2 whitespace-nowrap"
                             >
-                              <span className="text-slate-500">
+                              <span className="text-muted-foreground">
                                 {legLabels[fare.leg]}
                               </span>
-                              <span className="font-medium text-slate-700">
+                              <span className="font-medium text-soft-foreground">
                                 {formatCurrency(fare.amount)}
                               </span>
                             </div>
@@ -700,7 +697,7 @@ function TransportDaysPage() {
                               type="button"
                               variant="outline"
                               size="icon-sm"
-                              className="rounded-full border-sky-100 text-sky-700"
+                              className="rounded-full border-border text-accent-foreground"
                               disabled={!isOpen}
                               title={isOpen ? 'Edit' : closedReason}
                               onClick={() => startEdit(day.id)}
@@ -732,7 +729,7 @@ function TransportDaysPage() {
                 <TableRow>
                   <TableCell
                     colSpan={showRowActions ? 8 : 7}
-                    className="py-10 text-center text-slate-400"
+                    className="py-10 text-center text-faint-foreground"
                   >
                     No transport days logged for this period.
                   </TableCell>
@@ -776,8 +773,8 @@ function TaxiFareFields({
   payerError,
 }: TaxiFareFieldsProps) {
   return (
-    <div className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+    <div className="space-y-4 rounded-2xl border border-warning/30 bg-warning/10 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-warning">
         {legLabels[leg]} taxi fare
       </p>
 
@@ -805,7 +802,7 @@ function TaxiFareFields({
           ))}
         </Select>
         {members.length === 0 && (
-          <p className="text-xs text-amber-700">
+          <p className="text-xs text-warning">
             This crew has no active members to charge the fare to.
           </p>
         )}
@@ -824,11 +821,11 @@ interface FieldProps {
 function Field({ label, htmlFor, error, children }: FieldProps) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={htmlFor}>
+      <label className="text-sm font-medium text-soft-foreground" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
-      {error && <p className="text-xs font-medium text-red-500">{error}</p>}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
     </div>
   )
 }

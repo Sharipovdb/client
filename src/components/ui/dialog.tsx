@@ -48,14 +48,14 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-3xl border border-sky-100 bg-white p-5 shadow-[0_30px_80px_-40px_rgba(3,105,161,0.5)] duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 max-h-[85vh] overflow-y-auto sm:rounded-[28px] sm:p-6',
+          'fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-3xl border border-border bg-card p-5 shadow-overlay duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 max-h-[85vh] overflow-y-auto sm:rounded-[28px] sm:p-6',
           className,
         )}
         {...props}
       >
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close className="absolute top-5 right-5 flex size-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-sky-50 hover:text-slate-700">
+          <DialogPrimitive.Close className="absolute top-5 right-5 flex size-8 items-center justify-center rounded-full text-faint-foreground transition hover:bg-muted hover:text-soft-foreground">
             <X className="size-4" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
@@ -92,7 +92,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn('text-2xl font-semibold text-slate-950', className)}
+      className={cn('text-2xl font-semibold text-foreground', className)}
       {...props}
     />
   )
@@ -105,7 +105,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn('text-sm leading-6 text-slate-500', className)}
+      className={cn('text-sm leading-6 text-muted-foreground', className)}
       {...props}
     />
   )

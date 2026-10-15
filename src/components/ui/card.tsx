@@ -7,7 +7,7 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card"
       className={cn(
-        'rounded-3xl border border-sky-100 bg-white p-4 shadow-[0_20px_60px_-45px_rgba(14,116,144,0.45)] sm:rounded-[28px] sm:p-6',
+        'rounded-3xl border border-border bg-card p-4 shadow-card sm:rounded-[28px] sm:p-6',
         className,
       )}
       {...props}
@@ -29,7 +29,7 @@ function CardEyebrow({ className, ...props }: React.ComponentProps<'p'>) {
   return (
     <p
       data-slot="card-eyebrow"
-      className={cn('text-sm font-semibold uppercase tracking-[0.28em] text-sky-500', className)}
+      className={cn('text-sm font-semibold uppercase tracking-[0.28em] text-primary', className)}
       {...props}
     />
   )
@@ -39,7 +39,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<'h2'>) {
   return (
     <h2
       data-slot="card-title"
-      className={cn('text-2xl font-semibold text-slate-950', className)}
+      className={cn('text-2xl font-semibold text-foreground', className)}
       {...props}
     />
   )
@@ -49,7 +49,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<'p'>) {
   return (
     <p
       data-slot="card-description"
-      className={cn('text-sm leading-6 text-slate-500', className)}
+      className={cn('text-sm leading-6 text-muted-foreground', className)}
       {...props}
     />
   )

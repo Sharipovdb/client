@@ -345,8 +345,7 @@ function MonthlySheetsPage() {
       <Card>
         <CardHeader className="flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardEyebrow>Monthly Sheets</CardEyebrow>
-            <CardTitle className="mt-2">
+            <CardTitle>
               {formatMonthLabel(period.year, period.month)}
             </CardTitle>
           </div>
@@ -370,7 +369,7 @@ function MonthlySheetsPage() {
                 entered here, saved with the sheet, and stays readable on it afterwards. */}
             <div className="w-[calc(50%-0.375rem)] sm:w-44">
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-soft-foreground"
                 htmlFor="km-rate"
               >
                 Index (TJS/km)
@@ -392,7 +391,7 @@ function MonthlySheetsPage() {
                 settles the month in arrears, as before. */}
             <div className="w-[calc(50%-0.375rem)] sm:w-44">
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-soft-foreground"
                 htmlFor="opening-balance"
               >
                 Opening balance (TJS)
@@ -414,7 +413,7 @@ function MonthlySheetsPage() {
                 the month goes to the next sheet instead of being closed with this one. */}
             <div className="w-[calc(50%-0.375rem)] sm:w-44">
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-soft-foreground"
                 htmlFor="closing-date"
               >
                 Close on
@@ -434,7 +433,7 @@ function MonthlySheetsPage() {
         </CardHeader>
 
         {!isPricingLocked && unappliedInputs.length > 0 && (
-          <p className="mt-4 text-sm font-medium text-amber-600">
+          <p className="mt-4 text-sm font-medium text-warning">
             {`The ${unappliedInputs.join(' and ')} ${unappliedInputs.length > 1 ? 'have' : 'has'} not been applied yet — save the sheet to use ${unappliedInputs.length > 1 ? 'them' : 'it'}.`}
           </p>
         )}
@@ -442,17 +441,17 @@ function MonthlySheetsPage() {
 
       {!crew ? (
         <Card>
-          <p className="py-10 text-center text-slate-400">No crews yet.</p>
+          <p className="py-10 text-center text-faint-foreground">No crews yet.</p>
         </Card>
       ) : isLoading || preview.isLoading ? (
         <Card>
-          <p className="flex items-center justify-center gap-2 py-10 text-slate-400">
+          <p className="flex items-center justify-center gap-2 py-10 text-faint-foreground">
             <Loader2 className="size-4 animate-spin" /> Loading…
           </p>
         </Card>
       ) : (
         <Card>
-          <CardHeader className="flex-col gap-4 border-b border-sky-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+          <CardHeader className="flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <CardEyebrow>{crew.name}</CardEyebrow>
               <CardTitle className="mt-2 flex flex-wrap items-center gap-3">
@@ -473,11 +472,11 @@ function MonthlySheetsPage() {
               {displayedSheet && (
                 <CardDescription className="mt-2">
                   Paid to{' '}
-                  <span className="font-medium text-slate-700">
+                  <span className="font-medium text-soft-foreground">
                     {displayedSheet.recipientFullname || 'the crew lead'}
                   </span>
                   {' · '}
-                  <span className="font-medium text-slate-700">
+                  <span className="font-medium text-soft-foreground">
                     {formatPeriodRange(
                       displayedSheet.periodStart,
                       displayedSheet.periodEnd,
@@ -494,7 +493,7 @@ function MonthlySheetsPage() {
                 <Button
                   type="button"
                   size="sm"
-                  className="rounded-full bg-sky-600 text-white hover:bg-sky-700"
+                  className="rounded-full"
                   disabled={isBusy}
                   onClick={handleGenerate}
                 >
@@ -511,7 +510,7 @@ function MonthlySheetsPage() {
                 <Button
                   type="button"
                   size="sm"
-                  className="rounded-full bg-emerald-600 text-white hover:bg-emerald-700"
+                  className="rounded-full bg-success text-success-foreground hover:bg-success/90"
                   disabled={isBusy}
                   onClick={handleConfirm}
                 >
@@ -531,7 +530,7 @@ function MonthlySheetsPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="rounded-full border-sky-100 text-sky-700"
+                    className="rounded-full border-border text-accent-foreground"
                     disabled={isBusy}
                     onClick={handleUnconfirm}
                   >
@@ -544,7 +543,7 @@ function MonthlySheetsPage() {
                 <Button
                   type="button"
                   size="sm"
-                  className="rounded-full bg-emerald-600 text-white hover:bg-emerald-700"
+                  className="rounded-full bg-success text-success-foreground hover:bg-success/90"
                   disabled={isBusy}
                   onClick={() => setPayingSheet(sheet)}
                 >
@@ -558,7 +557,7 @@ function MonthlySheetsPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-sky-100 text-sky-700"
+                  className="rounded-full border-border text-accent-foreground"
                   disabled={isBusy}
                   onClick={handlePrint}
                 >
@@ -584,13 +583,13 @@ function MonthlySheetsPage() {
           </CardHeader>
 
           {errorMessage && (
-            <p className="mt-4 text-sm font-medium text-red-500">
+            <p className="mt-4 text-sm font-medium text-destructive">
               {errorMessage}
             </p>
           )}
 
           {!report ? (
-            <p className="py-10 text-center text-slate-400">
+            <p className="py-10 text-center text-faint-foreground">
               Nothing to show for this period yet.
             </p>
           ) : (
@@ -689,7 +688,7 @@ function MonthlySheetsPage() {
               </div>
 
               {report.travelledDayCount === 0 ? (
-                <p className="py-10 text-center text-slate-400">
+                <p className="py-10 text-center text-faint-foreground">
                   No travel logged for this crew in this period.
                 </p>
               ) : (

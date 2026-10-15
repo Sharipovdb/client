@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import type { Period } from '@/components/month-picker'
 import { MonthPicker } from '@/components/month-picker'
 import { Button } from '@/components/ui/button'
-import { Card, CardEyebrow, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -106,8 +106,7 @@ function PayoutsPage() {
       <Card>
         <CardHeader className="flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardEyebrow>Payouts</CardEyebrow>
-            <CardTitle className="mt-2">
+            <CardTitle>
               {formatMonthLabel(period.year, period.month)}
             </CardTitle>
           </div>
@@ -116,17 +115,17 @@ function PayoutsPage() {
         </CardHeader>
 
         {actionError && (
-          <p className="mt-4 text-sm font-medium text-red-500">{actionError}</p>
+          <p className="mt-4 text-sm font-medium text-destructive">{actionError}</p>
         )}
       </Card>
 
       <Card>
         {isLoading ? (
-          <p className="py-10 text-center text-slate-400">Loading…</p>
+          <p className="py-10 text-center text-faint-foreground">Loading…</p>
         ) : sheetsInPeriod.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-12 text-center">
-            <Wallet className="size-8 text-sky-300" />
-            <p className="text-slate-500">
+            <Wallet className="size-8 text-primary/40" />
+            <p className="text-muted-foreground">
               No generated sheets for this period yet.
             </p>
           </div>
@@ -147,7 +146,7 @@ function PayoutsPage() {
             <TableBody>
               {sheetsInPeriod.map((sheet) => (
                 <TableRow key={sheet.id}>
-                  <TableCell className="font-medium text-slate-900">
+                  <TableCell className="font-medium text-foreground">
                     {getCrewName(sheet.crewId)}
                   </TableCell>
                   <TableCell>{sheet.recipientFullname}</TableCell>
@@ -158,17 +157,17 @@ function PayoutsPage() {
                     {sheet.totalDrivenKm > 0 ? (
                       formatKm(sheet.totalDrivenKm)
                     ) : (
-                      <span className="text-slate-300">—</span>
+                      <span className="text-faint-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
                     {sheet.totalExtraBusinessKm > 0 ? (
                       formatKm(sheet.totalExtraBusinessKm)
                     ) : (
-                      <span className="text-slate-300">—</span>
+                      <span className="text-faint-foreground">—</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-slate-900">
+                  <TableCell className="text-right font-semibold text-foreground">
                     {formatCurrency(sheet.totalPayable)}
                   </TableCell>
 
@@ -184,7 +183,7 @@ function PayoutsPage() {
                         <Button
                           type="button"
                           size="sm"
-                          className="rounded-full bg-emerald-600 text-white hover:bg-emerald-700"
+                          className="rounded-full bg-success text-success-foreground hover:bg-success/90"
                           onClick={() => setPayingSheet(sheet)}
                         >
                           <BadgeCheck className="size-3.5" />
@@ -196,7 +195,7 @@ function PayoutsPage() {
                         type="button"
                         variant="outline"
                         size="icon-sm"
-                        className="rounded-full border-sky-100 text-sky-700"
+                        className="rounded-full border-border text-accent-foreground"
                         title={`Print the ${getCrewName(sheet.crewId)} report as PDF`}
                         onClick={() => handlePrint(sheet)}
                       >
@@ -209,18 +208,18 @@ function PayoutsPage() {
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell className="font-semibold text-slate-900" colSpan={5}>
+                <TableCell className="font-semibold text-foreground" colSpan={5}>
                   Grand total
                 </TableCell>
-                <TableCell className="text-right text-base font-semibold text-sky-700">
+                <TableCell className="text-right text-base font-semibold text-accent-foreground">
                   {formatCurrency(grandTotal)}
                 </TableCell>
                 <TableCell
-                  className="text-right text-xs font-normal text-slate-500"
+                  className="text-right text-xs font-normal text-muted-foreground"
                   colSpan={2}
                 >
                   Still to pay:{' '}
-                  <span className="font-medium text-slate-700">
+                  <span className="font-medium text-soft-foreground">
                     {formatCurrency(outstandingTotal)}
                   </span>
                 </TableCell>

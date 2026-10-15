@@ -18,7 +18,7 @@ type ConfirmTone = 'destructive' | 'positive'
 
 const toneStyles: Record<ConfirmTone, string> = {
   destructive: 'bg-red-600 text-white hover:bg-red-700',
-  positive: 'bg-emerald-600 text-white hover:bg-emerald-700',
+  positive: 'bg-success text-success-foreground hover:bg-success/90',
 }
 
 const toneLabels: Record<ConfirmTone, string> = {

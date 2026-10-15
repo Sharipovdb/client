@@ -12,7 +12,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardEyebrow,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -142,13 +141,12 @@ function RoutesPage() {
         <Card>
           <CardHeader className="flex-row items-start justify-between gap-4">
             <div>
-              <CardEyebrow>Routes</CardEyebrow>
-              <CardTitle className="mt-2">
+              <CardTitle>
                 {editingRoute ? 'Edit Route' : 'Add Route'}
               </CardTitle>
             </div>
 
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
               <Map className="size-5" />
             </div>
           </CardHeader>
@@ -182,13 +180,13 @@ function RoutesPage() {
             </Field>
 
             {formError && (
-              <p className="text-xs font-medium text-red-500">{formError}</p>
+              <p className="text-xs font-medium text-destructive">{formError}</p>
             )}
 
             <div className="flex flex-wrap gap-3 pt-2">
               <Button
                 type="submit"
-                className="h-11 rounded-2xl bg-sky-600 px-5 text-white hover:bg-sky-700"
+                className="h-11 rounded-2xl px-5"
                 disabled={isSubmitting}
               >
                 {editingRoute ? (
@@ -202,7 +200,7 @@ function RoutesPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 rounded-2xl border-sky-100 px-5 text-slate-700"
+                className="h-11 rounded-2xl border-border px-5 text-soft-foreground"
                 onClick={resetForm}
               >
                 Clear Form
@@ -213,10 +211,9 @@ function RoutesPage() {
       )}
 
       <Card>
-        <CardHeader className="flex-col gap-4 border-b border-sky-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <CardHeader className="flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardEyebrow>Routes list</CardEyebrow>
-            <CardTitle className="mt-2">Standard Commute Distances</CardTitle>
+            <CardTitle>Standard Commute Distances</CardTitle>
             <CardDescription className="mt-2">
               {isLoading
                 ? 'Loading…'
@@ -224,7 +221,7 @@ function RoutesPage() {
             </CardDescription>
           </div>
 
-          <div className="hidden items-center gap-2 rounded-full bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700 sm:inline-flex">
+          <div className="hidden items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-medium text-accent-foreground sm:inline-flex">
             <RouteIcon className="size-4" />
             One-way distance
           </div>
@@ -244,7 +241,7 @@ function RoutesPage() {
             <TableBody>
               {sortedRoutes.map((route) => (
                 <TableRow key={route.name}>
-                  <TableCell className="font-medium text-slate-900">
+                  <TableCell className="font-medium text-foreground">
                     {route.name}
                   </TableCell>
                   <TableCell>{route.distanceKm} km</TableCell>
@@ -256,7 +253,8 @@ function RoutesPage() {
                             type="button"
                             variant="outline"
                             size="icon"
-                            className="rounded-full border-sky-100 text-sky-700"
+                            className="rounded-full border-border text-accent-foreground"
+                            title="Edit route"
                             onClick={() => setEditingRouteId(route.id)}
                           >
                             <PencilLine className="size-4" />
@@ -268,6 +266,7 @@ function RoutesPage() {
                             variant="destructive"
                             size="icon"
                             className="rounded-full"
+                            title="Delete route"
                             onClick={() => setDeletingRouteId(route.id)}
                           >
                             <Trash2 className="size-4" />
@@ -283,7 +282,7 @@ function RoutesPage() {
                 <TableRow>
                   <TableCell
                     colSpan={3}
-                    className="py-10 text-center text-slate-400"
+                    className="py-10 text-center text-faint-foreground"
                   >
                     No routes yet — add the first one.
                   </TableCell>
@@ -319,11 +318,11 @@ interface FieldProps {
 function Field({ label, htmlFor, error, children }: FieldProps) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={htmlFor}>
+      <label className="text-sm font-medium text-soft-foreground" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
-      {error && <p className="text-xs font-medium text-red-500">{error}</p>}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
     </div>
   )
 }

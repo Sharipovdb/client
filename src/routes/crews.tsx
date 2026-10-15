@@ -16,7 +16,7 @@ import { z } from 'zod'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardEyebrow, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { CrewMembershipDialog } from '@/features/crews/crew-membership-dialog'
@@ -255,13 +255,12 @@ function CrewsPage() {
         <Card>
           <CardHeader className="flex-row items-start justify-between gap-4">
             <div>
-              <CardEyebrow>Crews</CardEyebrow>
-              <CardTitle className="mt-2">
+              <CardTitle>
                 {editingCrew ? 'Edit Crew' : 'Add Crew'}
               </CardTitle>
             </div>
 
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
               <Bus className="size-5" />
             </div>
           </CardHeader>
@@ -319,7 +318,7 @@ function CrewsPage() {
             )}
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-700">Lead Type</p>
+              <p className="text-sm font-medium text-soft-foreground">Lead Type</p>
               <div className="grid grid-cols-2 gap-2">
                 {(['driverLead', 'crewLead'] as LeadType[]).map((type) => (
                   <button
@@ -332,8 +331,8 @@ function CrewsPage() {
                     }}
                     className={`rounded-2xl border px-4 py-2.5 text-sm font-medium transition ${
                       leadType === type
-                        ? 'border-sky-600 bg-sky-600 text-white'
-                        : 'border-sky-100 bg-white text-slate-600 hover:border-sky-200'
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-card text-soft-foreground hover:border-border-strong'
                     }`}
                   >
                     {type === 'driverLead' ? 'Driver-Lead' : 'Crew-Lead'}
@@ -376,7 +375,7 @@ function CrewsPage() {
               </Select>
 
               {employees.length === 0 && (
-                <p className="text-xs text-amber-600">
+                <p className="text-xs text-warning">
                   No employees available.
                 </p>
               )}
@@ -397,13 +396,13 @@ function CrewsPage() {
             </Field>
 
             {formError && (
-              <p className="text-xs font-medium text-red-500">{formError}</p>
+              <p className="text-xs font-medium text-destructive">{formError}</p>
             )}
 
             <div className="flex flex-wrap gap-3 pt-2">
               <Button
                 type="submit"
-                className="h-11 rounded-2xl bg-sky-600 px-5 text-white hover:bg-sky-700"
+                className="h-11 rounded-2xl px-5"
                 disabled={isSubmitting}
               >
                 {editingCrew ? (
@@ -417,7 +416,7 @@ function CrewsPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 rounded-2xl border-sky-100 px-5 text-slate-700"
+                className="h-11 rounded-2xl border-border px-5 text-soft-foreground"
                 onClick={resetForm}
               >
                 Clear Form
@@ -438,10 +437,10 @@ function CrewsPage() {
                     <Badge variant={crew.driverLeadId ? 'success' : 'default'}>
                       {crew.driverLeadId ? 'Driver-Lead' : 'Manager-Lead'}
                     </Badge>
-                    <h3 className="mt-2 text-lg font-semibold text-slate-950">
+                    <h3 className="mt-2 text-lg font-semibold text-foreground">
                       {crew.name}
                     </h3>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-muted-foreground">
                       {pricingLabel(crew)}
                     </p>
                   </div>
@@ -451,7 +450,8 @@ function CrewsPage() {
                       type="button"
                       variant="outline"
                       size="icon-sm"
-                      className="rounded-full border-sky-100 text-sky-700"
+                      className="rounded-full border-border text-accent-foreground"
+                      title="Edit crew"
                       onClick={() => setEditingCrewId(crew.id)}
                     >
                       <PencilLine className="size-3.5" />
@@ -461,6 +461,7 @@ function CrewsPage() {
                       variant="destructive"
                       size="icon-sm"
                       className="rounded-full"
+                      title="Delete crew"
                       onClick={() => setDeletingCrewId(crew.id)}
                     >
                       <Trash2 className="size-3.5" />
@@ -468,15 +469,15 @@ function CrewsPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-1.5 text-sm text-slate-600">
+                <div className="mt-4 space-y-1.5 text-sm text-soft-foreground">
                   <p>
-                    <span className="font-medium text-slate-800">Lead:</span>{' '}
+                    <span className="font-medium text-foreground">Lead:</span>{' '}
                     {crew.driverLeadId
                       ? employeeName(crew.driverLeadId)
                       : employeeName(crew.crewLeadId)}
                   </p>
                   <p>
-                    <span className="font-medium text-slate-800">Seats:</span>{' '}
+                    <span className="font-medium text-foreground">Seats:</span>{' '}
                     {activeMembers.length} / {crew.seatCapacity}
                   </p>
                 </div>
@@ -491,7 +492,7 @@ function CrewsPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="mt-4 h-10 w-full rounded-2xl border-sky-100 text-sky-700"
+                  className="mt-4 h-10 w-full rounded-2xl border-border text-accent-foreground"
                   onClick={() => setMembershipCrewId(crew.id)}
                 >
                   <Users className="size-4" />
@@ -503,7 +504,7 @@ function CrewsPage() {
 
           {!isLoading && crews.length === 0 && (
             <Card className="sm:col-span-2">
-              <p className="py-10 text-center text-slate-400">
+              <p className="py-10 text-center text-faint-foreground">
                 No crews yet — add the first one.
               </p>
             </Card>
@@ -548,11 +549,11 @@ interface FieldProps {
 function Field({ label, htmlFor, error, children }: FieldProps) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={htmlFor}>
+      <label className="text-sm font-medium text-soft-foreground" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
-      {error && <p className="text-xs font-medium text-red-500">{error}</p>}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
     </div>
   )
 }

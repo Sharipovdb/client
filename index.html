@@ -5,6 +5,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>srp-transport</title>
+    <script>
+      // Mirrors applyThemePreference in src/lib/theme.ts. It runs before the first paint
+      // so a dark-theme user never sees a flash of the light theme.
+      try {
+        var preference = JSON.parse(
+          localStorage.getItem('srp-transport.theme') || '"system"',
+        )
+        var dark =
+          preference === 'dark' ||
+          (preference !== 'light' &&
+            matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.toggle('dark', dark)
+      } catch (error) {}
+    </script>
   </head>
   <body>
     <div id="app"></div>

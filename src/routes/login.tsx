@@ -71,13 +71,13 @@ function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#d9f3ff_0%,#eef8fc_35%,#f7fbfd_100%)] px-4 py-10">
-      <div className="w-full max-w-md rounded-[32px] border border-white/80 bg-white/92 p-8 shadow-[0_30px_80px_-48px_rgba(3,105,161,0.8)] backdrop-blur-xl">
+    <div className="flex min-h-screen items-center justify-center bg-(image:--login-backdrop) px-4 py-10">
+      <div className="w-full max-w-md rounded-[32px] border border-border bg-card/92 p-8 shadow-overlay backdrop-blur-xl">
         <div className="space-y-3 text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.32em] text-sky-500">
+          <p className="text-sm font-semibold uppercase tracking-[0.32em] text-primary">
             SRP Transportation
           </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
             Sign in
           </h1>
         </div>
@@ -85,7 +85,7 @@ function LoginPage() {
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-soft-foreground"
               htmlFor="login"
             >
               Username
@@ -104,7 +104,7 @@ function LoginPage() {
 
           <div className="space-y-2">
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-soft-foreground"
               htmlFor="password"
             >
               Password
@@ -124,22 +124,22 @@ function LoginPage() {
           </div>
 
           {errorMessage && (
-            <p className="text-sm text-rose-500">{errorMessage}</p>
+            <p className="text-sm text-destructive">{errorMessage}</p>
           )}
 
           <Button
-            className="h-11 w-full rounded-2xl bg-sky-600 text-white hover:bg-sky-700"
+            className="h-11 w-full rounded-2xl"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Signing in…' : 'Sign in'}
           </Button>
         </form>
 
-        {/* <div className="mt-8 border-t border-sky-100 pt-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        {/* <div className="mt-8 border-t border-border pt-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-faint-foreground">
             Demo accounts
           </p>
-          <p className="mt-2 text-xs text-slate-400">
+          <p className="mt-2 text-xs text-faint-foreground">
             Seeded on the backend, one password for all: <code>{DEMO_PASSWORD}</code>
           </p>
 
@@ -148,14 +148,14 @@ function LoginPage() {
               <button
                 key={account.phoneNumber}
                 type="button"
-                className="flex items-center justify-between gap-3 rounded-2xl border border-sky-100 bg-sky-50/50 px-3 py-2 text-left transition hover:border-sky-200 hover:bg-sky-50"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/50 px-3 py-2 text-left transition hover:border-border-strong hover:bg-muted"
                 onClick={() => {
                   setFormState({ login: account.phoneNumber, password: DEMO_PASSWORD })
                   setErrorMessage('')
                 }}
               >
-                <span className="truncate text-sm text-slate-700">{account.name}</span>
-                <span className="shrink-0 text-xs font-medium text-sky-600">
+                <span className="truncate text-sm text-soft-foreground">{account.name}</span>
+                <span className="shrink-0 text-xs font-medium text-primary">
                   {roleLabels[account.role]}
                 </span>
               </button>

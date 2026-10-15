@@ -13,7 +13,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardEyebrow,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -177,13 +176,12 @@ function VehiclesPage() {
         <Card>
           <CardHeader className="flex-row items-start justify-between gap-4">
             <div>
-              <CardEyebrow>Vehicles</CardEyebrow>
-              <CardTitle className="mt-2">
+              <CardTitle>
                 {editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}
               </CardTitle>
             </div>
 
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
               <Car className="size-5" />
             </div>
           </CardHeader>
@@ -250,7 +248,7 @@ function VehiclesPage() {
             <div className="flex flex-wrap gap-3 pt-2">
               <Button
                 type="submit"
-                className="h-11 rounded-2xl bg-sky-600 px-5 text-white hover:bg-sky-700"
+                className="h-11 rounded-2xl px-5"
                 disabled={isSubmitting}
               >
                 {editingVehicle ? (
@@ -264,7 +262,7 @@ function VehiclesPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 rounded-2xl border-sky-100 px-5 text-slate-700"
+                className="h-11 rounded-2xl border-border px-5 text-soft-foreground"
                 onClick={resetForm}
               >
                 Clear Form
@@ -272,13 +270,13 @@ function VehiclesPage() {
             </div>
 
             {availableDriverOptions.length === 0 && !editingVehicle && (
-              <p className="text-xs font-medium text-amber-600">
+              <p className="text-xs font-medium text-warning">
                 Every Driver-Lead already has a vehicle assigned.
               </p>
             )}
 
             {formError && (
-              <p className="text-xs font-medium text-red-500">{formError}</p>
+              <p className="text-xs font-medium text-destructive">{formError}</p>
             )}
           </form>
         </Card>
@@ -286,14 +284,14 @@ function VehiclesPage() {
 
       <div className="space-y-6">
         {driverLeadsWithoutVehicle.length > 0 && (
-          <Card className="border-amber-200 bg-amber-50/70">
+          <Card className="border-warning/30 bg-warning/10">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-600" />
+              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warning" />
               <div>
-                <p className="text-sm font-semibold text-amber-800">
+                <p className="text-sm font-semibold text-warning">
                   Driver-Leads without a vehicle
                 </p>
-                <p className="mt-1 text-sm text-amber-700">
+                <p className="mt-1 text-sm text-warning">
                   {driverLeadsWithoutVehicle
                     .map((employee) => employee.fullname)
                     .join(', ')}
@@ -304,10 +302,9 @@ function VehiclesPage() {
         )}
 
         <Card>
-          <CardHeader className="flex-col gap-4 border-b border-sky-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <CardHeader className="flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <CardEyebrow>Vehicles list</CardEyebrow>
-              <CardTitle className="mt-2">Fleet</CardTitle>
+              <CardTitle>Fleet</CardTitle>
               <CardDescription className="mt-2">
                 {isLoading
                   ? 'Loading…'
@@ -332,7 +329,7 @@ function VehiclesPage() {
               <TableBody>
                 {vehicles.map((vehicle) => (
                   <TableRow key={vehicle.id}>
-                    <TableCell className="font-medium text-slate-900">
+                    <TableCell className="font-medium text-foreground">
                       {employeeName(vehicle.driverId)}
                     </TableCell>
                     <TableCell>
@@ -348,7 +345,8 @@ function VehiclesPage() {
                               type="button"
                               variant="outline"
                               size="icon"
-                              className="rounded-full border-sky-100 text-sky-700"
+                              className="rounded-full border-border text-accent-foreground"
+                              title="Edit vehicle"
                               onClick={() => setEditingVehicleId(vehicle.id)}
                             >
                               <PencilLine className="size-4" />
@@ -360,6 +358,7 @@ function VehiclesPage() {
                               variant="destructive"
                               size="icon"
                               className="rounded-full"
+                              title="Delete vehicle"
                               onClick={() => setDeletingVehicleId(vehicle.id)}
                             >
                               <Trash2 className="size-4" />
@@ -375,7 +374,7 @@ function VehiclesPage() {
                   <TableRow>
                     <TableCell
                       colSpan={5}
-                      className="py-10 text-center text-slate-400"
+                      className="py-10 text-center text-faint-foreground"
                     >
                       No vehicles registered yet.
                     </TableCell>
@@ -412,11 +411,11 @@ interface FieldProps {
 function Field({ label, htmlFor, error, children }: FieldProps) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={htmlFor}>
+      <label className="text-sm font-medium text-soft-foreground" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
-      {error && <p className="text-xs font-medium text-red-500">{error}</p>}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
     </div>
   )
 }

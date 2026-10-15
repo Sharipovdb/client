@@ -46,6 +46,14 @@ body {
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-soft-foreground: var(--soft-foreground);
+  --color-faint-foreground: var(--faint-foreground);
+  --color-border-strong: var(--border-strong);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --shadow-card: var(--card-shadow);
+  --shadow-overlay: var(--overlay-shadow);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -73,25 +81,34 @@ body {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Light values are the Tailwind sky/slate shades the pages were drawn with before they
+   moved onto tokens, so the light theme looks exactly as it did. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  color-scheme: light;
+  --background: oklch(0.977 0.013 236.62);
+  --foreground: oklch(0.208 0.042 265.755);
+  --soft-foreground: oklch(0.372 0.044 257.287);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --faint-foreground: oklch(0.704 0.04 256.788);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.208 0.042 265.755);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.208 0.042 265.755);
+  --primary: oklch(0.588 0.158 241.966);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.446 0.043 257.281);
+  --muted: oklch(0.977 0.013 236.62);
+  --accent: oklch(0.951 0.026 236.824);
+  --accent-foreground: oklch(0.5 0.134 242.749);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --warning: oklch(0.666 0.179 58.318);
+  --success: oklch(0.596 0.145 163.225);
+  --success-foreground: oklch(1 0 0);
+  --border: oklch(0.951 0.026 236.824);
+  --border-strong: oklch(0.901 0.058 230.902);
+  --input: oklch(0.951 0.026 236.824);
+  --ring: oklch(0.746 0.16 232.661);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -100,33 +117,45 @@ body {
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(1 0 0);
+  --sidebar-primary-foreground: oklch(0.5 0.134 242.749);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --app-backdrop: linear-gradient(180deg, #eef9fc 0%, #f8fcfe 32%, #f4f9fc 100%);
+  --sidebar-backdrop: linear-gradient(180deg, #1495cf 0%, #1f9dd3 38%, #2ba6d8 100%);
+  --login-backdrop: radial-gradient(circle at top, #d9f3ff 0%, #eef8fc 35%, #f7fbfd 100%);
+  --card-shadow: 0 20px 60px -45px rgba(14, 116, 144, 0.45);
+  --overlay-shadow: 0 30px 80px -40px rgba(3, 105, 161, 0.5);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  color-scheme: dark;
+  --background: oklch(0.165 0.025 252);
+  --foreground: oklch(0.968 0.007 247.896);
+  --soft-foreground: oklch(0.869 0.022 252.894);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --faint-foreground: oklch(0.554 0.046 257.417);
+  --card: oklch(0.215 0.03 252);
+  --card-foreground: oklch(0.968 0.007 247.896);
+  --popover: oklch(0.235 0.032 252);
+  --popover-foreground: oklch(0.968 0.007 247.896);
+  --primary: oklch(0.746 0.16 232.661);
+  --primary-foreground: oklch(0.293 0.066 243.157);
+  --secondary: oklch(0.28 0.03 255);
+  --secondary-foreground: oklch(0.869 0.022 252.894);
+  --muted: oklch(0.255 0.035 248);
+  --accent: oklch(0.3 0.06 240);
+  --accent-foreground: oklch(0.828 0.111 230.318);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --warning: oklch(0.828 0.189 84.429);
+  --success: oklch(0.696 0.17 162.48);
+  --success-foreground: oklch(0.262 0.051 172.552);
+  --border: oklch(0.3 0.035 250);
+  --border-strong: oklch(0.38 0.05 242);
+  --input: oklch(0.3 0.035 250);
+  --ring: oklch(0.588 0.158 241.966);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -134,12 +163,17 @@ body {
   --chart-5: oklch(0.269 0 0);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.746 0.16 232.661);
+  --sidebar-primary-foreground: oklch(0.293 0.066 243.157);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --app-backdrop: linear-gradient(180deg, oklch(0.19 0.03 245) 0%, oklch(0.165 0.025 252) 40%, oklch(0.155 0.022 255) 100%);
+  --sidebar-backdrop: linear-gradient(180deg, oklch(0.32 0.085 242) 0%, oklch(0.27 0.07 245) 50%, oklch(0.23 0.05 250) 100%);
+  --login-backdrop: radial-gradient(circle at top, oklch(0.27 0.06 240) 0%, oklch(0.19 0.03 248) 45%, oklch(0.155 0.022 255) 100%);
+  --card-shadow: 0 20px 60px -45px rgba(0, 0, 0, 0.7);
+  --overlay-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.8);
 }
 
 @layer base {

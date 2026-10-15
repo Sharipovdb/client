@@ -148,7 +148,7 @@ export function CrewMembershipDialog({
         </DialogHeader>
 
         <div className="space-y-3">
-          <p className="text-sm font-semibold text-slate-700">
+          <p className="text-sm font-semibold text-soft-foreground">
             Active members ({activeMembers.length} / {crew.seatCapacity} seats)
           </p>
 
@@ -156,13 +156,13 @@ export function CrewMembershipDialog({
             {activeMembers.map((membership) => (
               <div
                 key={membership.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-100 bg-sky-50/50 px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-muted/50 px-4 py-3"
               >
                 <div>
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-medium text-foreground">
                     {employeeName(membership.employeeId)}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     Active since {membership.activeFrom}
                   </p>
                 </div>
@@ -189,7 +189,8 @@ export function CrewMembershipDialog({
                     type="button"
                     variant="outline"
                     size="icon-sm"
-                    className="rounded-full border-sky-100 text-sky-700"
+                    className="rounded-full border-border text-accent-foreground"
+                    title="Move to the selected crew"
                     disabled={!transferTargetByMembership[membership.id]}
                     onClick={() =>
                       handleTransfer(membership.id, membership.employeeId)
@@ -202,6 +203,7 @@ export function CrewMembershipDialog({
                     variant="destructive"
                     size="icon-sm"
                     className="rounded-full"
+                    title="Remove from crew"
                     onClick={() => setRemovingMembershipId(membership.id)}
                   >
                     <UserMinus className="size-3.5" />
@@ -211,7 +213,7 @@ export function CrewMembershipDialog({
             ))}
 
             {activeMembers.length === 0 && (
-              <p className="rounded-2xl border border-dashed border-sky-200 px-4 py-6 text-center text-sm text-slate-400">
+              <p className="rounded-2xl border border-dashed border-border-strong px-4 py-6 text-center text-sm text-faint-foreground">
                 No active members yet.
               </p>
             )}
@@ -224,14 +226,14 @@ export function CrewMembershipDialog({
           )}
         </div>
 
-        <div className="rounded-2xl border border-sky-100 bg-white p-4">
-          <p className="text-sm font-semibold text-slate-700">
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <p className="text-sm font-semibold text-soft-foreground">
             Assign a new member
           </p>
 
           <div className="mt-3 flex flex-wrap items-end gap-3">
             <div className="min-w-48 flex-1 space-y-1.5">
-              <label className="text-xs font-medium text-slate-500">
+              <label className="text-xs font-medium text-muted-foreground">
                 Employees
               </label>
               <Combobox
@@ -278,7 +280,7 @@ export function CrewMembershipDialog({
 
             <Button
               type="button"
-              className="h-11 rounded-2xl bg-sky-600 px-4 text-white hover:bg-sky-700"
+              className="h-11 rounded-2xl px-4"
               onClick={handleAssign}
             >
               <UserPlus className="size-4" />
@@ -287,7 +289,7 @@ export function CrewMembershipDialog({
           </div>
 
           {assignError && (
-            <p className="mt-2 text-xs font-medium text-red-500">
+            <p className="mt-2 text-xs font-medium text-destructive">
               {assignError}
             </p>
           )}

@@ -19,7 +19,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardEyebrow,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -215,13 +214,12 @@ function EmployeesPage() {
       <Card>
         <CardHeader className="flex-row items-start justify-between gap-4">
           <div>
-            <CardEyebrow>People</CardEyebrow>
-            <CardTitle className="mt-2">
+            <CardTitle>
               {editingEmployee ? 'Edit Employee' : 'Add Employee'}
             </CardTitle>
           </div>
 
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
             <Briefcase className="size-5" />
           </div>
         </CardHeader>
@@ -348,13 +346,13 @@ function EmployeesPage() {
           </Field>
 
           {formError && (
-            <p className="text-xs font-medium text-red-500">{formError}</p>
+            <p className="text-xs font-medium text-destructive">{formError}</p>
           )}
 
           <div className="flex flex-wrap gap-3 pt-2">
             <Button
               type="submit"
-              className="h-11 rounded-2xl bg-sky-600 px-5 text-white hover:bg-sky-700"
+              className="h-11 rounded-2xl px-5"
               disabled={isSubmitting}
             >
               {editingEmployee ? (
@@ -368,7 +366,7 @@ function EmployeesPage() {
             <Button
               type="button"
               variant="outline"
-              className="h-11 rounded-2xl border-sky-100 px-5 text-slate-700"
+              className="h-11 rounded-2xl border-border px-5 text-soft-foreground"
               onClick={resetForm}
             >
               Clear Form
@@ -378,10 +376,9 @@ function EmployeesPage() {
       </Card>
 
       <Card>
-        <CardHeader className="flex-col gap-4 border-b border-sky-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <CardHeader className="flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardEyebrow>Employees list</CardEyebrow>
-            <CardTitle className="mt-2">Team Members</CardTitle>
+            <CardTitle>Team Members</CardTitle>
             <CardDescription className="mt-2">
               {isLoading
                 ? 'Loading…'
@@ -405,7 +402,7 @@ function EmployeesPage() {
               ))}
             </Select>
 
-            <div className="hidden items-center gap-2 rounded-full bg-sky-50 px-4 py-2 text-sm font-medium text-sky-700 sm:inline-flex">
+            <div className="hidden items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-medium text-accent-foreground sm:inline-flex">
               <Users className="size-4" />
               {employees.length} total
             </div>
@@ -426,7 +423,7 @@ function EmployeesPage() {
             <TableBody>
               {filteredEmployees.map((employee) => (
                 <TableRow key={employee.id}>
-                  <TableCell className="font-medium text-slate-900">
+                  <TableCell className="font-medium text-foreground">
                     {employee.fullname}
                   </TableCell>
                   <TableCell>
@@ -448,7 +445,8 @@ function EmployeesPage() {
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="rounded-full border-sky-100 text-sky-700"
+                        className="rounded-full border-border text-accent-foreground"
+                        title="Edit employee"
                         onClick={() => setEditingEmployeeId(employee.id)}
                       >
                         <PencilLine className="size-4" />
@@ -458,7 +456,7 @@ function EmployeesPage() {
                           type="button"
                           variant="outline"
                           size="icon"
-                          className="rounded-full border-sky-100 text-sky-700"
+                          className="rounded-full border-border text-accent-foreground"
                           title="Reset password"
                           onClick={() => setResettingEmployeeId(employee.id)}
                         >
@@ -470,6 +468,7 @@ function EmployeesPage() {
                         variant="destructive"
                         size="icon"
                         className="rounded-full"
+                        title="Delete employee"
                         onClick={() => setDeletingEmployeeId(employee.id)}
                       >
                         <Trash2 className="size-4" />
@@ -483,7 +482,7 @@ function EmployeesPage() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="py-10 text-center text-slate-400"
+                    className="py-10 text-center text-faint-foreground"
                   >
                     No employees yet.
                   </TableCell>
@@ -535,11 +534,11 @@ interface FieldProps {
 function Field({ label, htmlFor, error, children }: FieldProps) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={htmlFor}>
+      <label className="text-sm font-medium text-soft-foreground" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
-      {error && <p className="text-xs font-medium text-red-500">{error}</p>}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
     </div>
   )
 }

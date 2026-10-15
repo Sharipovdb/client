@@ -125,7 +125,7 @@ export function PasswordDialog({
           </PasswordField>
 
           {formError && (
-            <p className="text-xs font-medium text-red-500">{formError}</p>
+            <p className="text-xs font-medium text-destructive">{formError}</p>
           )}
 
           <DialogFooter>
@@ -139,7 +139,7 @@ export function PasswordDialog({
             </Button>
             <Button
               type="submit"
-              className="rounded-full bg-sky-600 text-white hover:bg-sky-700"
+              className="rounded-full"
               disabled={isSubmitting}
             >
               {submitLabel}
@@ -166,11 +166,11 @@ function PasswordField({
 }: PasswordFieldProps) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={htmlFor}>
+      <label className="text-sm font-medium text-soft-foreground" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
-      {error && <p className="text-xs font-medium text-red-500">{error}</p>}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
     </div>
   )
 }

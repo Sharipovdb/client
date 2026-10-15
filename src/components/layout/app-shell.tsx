@@ -6,17 +6,33 @@ import {
   KeyRound,
   LogOut,
   Menu,
+  Monitor,
+  Moon,
+  Sun,
   UserRound,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { getNavigationItemsForRole, getPageTitle } from '@/app/navigation'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { changeOwnPassword } from '@/features/account/change-own-password'
 import { PasswordDialog } from '@/features/account/password-dialog'
 import { useAuth } from '@/features/auth/auth-context'
 import { roleLabels } from '@/lib/app-types'
+import { useThemePreference } from '@/lib/theme'
+import type { ThemePreference } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
 interface AppShellProps {
@@ -35,6 +51,16 @@ const collapsedSidebarWidth = 'lg:w-[112px]'
 const expandedContentOffset = 'lg:ml-[280px]'
 const collapsedContentOffset = 'lg:ml-[112px]'
 
+const themeOptions: {
+  value: ThemePreference
+  label: string
+  icon: LucideIcon
+}[] = [
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'system', label: 'System', icon: Monitor },
+]
+
 export function AppShell({ children }: AppShellProps) {
   const { session, logout } = useAuth()
   const pathname = useRouterState({
@@ -42,8 +68,8 @@ export function AppShell({ children }: AppShellProps) {
   })
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
+  const [themePreference, setThemePreference] = useThemePreference()
 
   const visibleItems = session ? getNavigationItemsForRole(session.roles) : []
 
@@ -55,14 +81,15 @@ export function AppShell({ children }: AppShellProps) {
     : expandedContentOffset
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#eef9fc_0%,#f8fcfe_32%,#f4f9fc_100%)] text-slate-900">
-      <header className="sticky top-0 z-30 border-b border-sky-100/80 bg-white/96 backdrop-blur-xl">
+    <div className="min-h-screen bg-(image:--app-backdrop) text-foreground">
+      <header className="sticky top-0 z-30 border-b border-border/80 bg-card/96 backdrop-blur-xl">
         <div className="flex min-h-20 items-center justify-between gap-2 px-3 py-2 sm:min-h-26 sm:gap-4 sm:px-6 sm:py-4 lg:px-10">
           <div className="flex items-center gap-2 sm:gap-4">
             <Button
               variant="outline"
               size="icon"
               className="lg:hidden"
+              title="Open menu"
               onClick={() => setMobileSidebarOpen(true)}
             >
               <Menu className="size-4" />
@@ -71,9 +98,9 @@ export function AppShell({ children }: AppShellProps) {
             <BrandLogo collapsed={sidebarCollapsed} />
           </div>
 
-          <div className="flex min-w-0 flex-1 items-center justify-between gap-2 sm:gap-4 sm:border-l sm:border-sky-100 sm:pl-6 lg:pl-10">
+          <div className="flex min-w-0 flex-1 items-center justify-between gap-2 sm:gap-4 sm:border-l sm:border-border sm:pl-6 lg:pl-10">
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-semibold tracking-tight text-slate-900 sm:text-2xl lg:text-3xl">
+              <h1 className="truncate text-lg font-semibold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
                 {getPageTitle(pathname)}
               </h1>
             </div>
@@ -82,86 +109,101 @@ export function AppShell({ children }: AppShellProps) {
               <Button
                 variant="outline"
                 size="icon"
-                className="hidden rounded-full border-sky-100 text-sky-600 sm:inline-flex"
+                className="hidden rounded-full border-border text-primary sm:inline-flex"
+                title="Notifications"
               >
                 <Bell className="size-4" />
               </Button>
 
               {session && (
-                <div className="relative">
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 rounded-full border border-sky-100 bg-white p-1 text-left shadow-sm shadow-sky-100/80 transition hover:border-sky-200 sm:gap-3 sm:px-3 sm:py-2"
-                    onClick={() => setProfileMenuOpen((current) => !current)}
-                  >
-                    <span className="flex size-9 items-center justify-center rounded-full bg-sky-100 text-sky-700 sm:size-10">
-                      <UserRound className="size-5" />
-                    </span>
-
-                    <span className="hidden min-w-0 md:block">
-                      <span className="block truncate text-sm font-semibold text-slate-900">
-                        {session.fullname}
+                // Non-modal so opening the password dialog from an item does not fight
+                // the menu over focus and the body's pointer-events lock.
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={session.fullname}
+                      className="group flex items-center gap-2 rounded-full border border-border bg-card p-1 text-left shadow-sm shadow-accent/80 transition outline-none hover:border-border-strong focus-visible:ring-3 focus-visible:ring-ring/50 sm:gap-3 sm:px-3 sm:py-2"
+                    >
+                      <span className="flex size-9 items-center justify-center rounded-full bg-accent text-accent-foreground sm:size-10">
+                        <UserRound className="size-5" />
                       </span>
-                      <span className="block truncate text-xs text-slate-500">
-                        {session.roles
-                          .map((role) => roleLabels[role])
-                          .join(', ')}
-                      </span>
-                    </span>
 
-                    <ChevronDown
-                      className={cn(
-                        'mr-1 size-4 shrink-0 text-slate-400 transition-transform sm:mr-0',
-                        profileMenuOpen && 'rotate-180',
-                      )}
-                    />
-                  </button>
-
-                  {profileMenuOpen && (
-                    <div className="absolute right-0 top-[calc(100%+0.75rem)] w-64 rounded-[24px] border border-sky-100 bg-white p-4 shadow-[0_24px_60px_-32px_rgba(14,116,144,0.45)]">
-                      <div className="flex items-center gap-3">
-                        <span className="flex size-11 items-center justify-center rounded-full bg-sky-100 text-sky-700">
-                          <UserRound className="size-5" />
+                      <span className="hidden min-w-0 md:block">
+                        <span className="block truncate text-sm font-semibold text-foreground">
+                          {session.fullname}
                         </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {session.roles
+                            .map((role) => roleLabels[role])
+                            .join(', ')}
+                        </span>
+                      </span>
 
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-900">
-                            {session.fullname}
-                          </p>
-                          <p className="truncate text-xs text-slate-500">
-                            {session.roles
-                              .map((role) => roleLabels[role])
-                              .join(', ')}
-                          </p>
-                        </div>
-                      </div>
+                      <ChevronDown className="mr-1 size-4 shrink-0 text-faint-foreground transition-transform group-data-[state=open]:rotate-180 sm:mr-0" />
+                    </button>
+                  </DropdownMenuTrigger>
 
-                      <Button
-                        variant="outline"
-                        className="mt-4 h-11 w-full rounded-2xl border-sky-100 text-sky-700"
-                        onClick={() => {
-                          setProfileMenuOpen(false)
-                          setChangingPassword(true)
-                        }}
-                      >
-                        <KeyRound className="size-4" />
-                        Change password
-                      </Button>
+                  <DropdownMenuContent align="end" className="w-64">
+                    <DropdownMenuLabel className="flex items-center gap-3">
+                      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                        <UserRound className="size-5" />
+                      </span>
 
-                      <Button
-                        variant="outline"
-                        className="mt-2 h-11 w-full rounded-2xl border-sky-100 text-sky-700"
-                        onClick={() => {
-                          setProfileMenuOpen(false)
-                          logout()
-                        }}
-                      >
-                        <LogOut className="size-4" />
-                        Logout
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-foreground">
+                          {session.fullname}
+                        </span>
+                        <span className="block truncate text-xs font-normal text-muted-foreground">
+                          {session.roles
+                            .map((role) => roleLabels[role])
+                            .join(', ')}
+                        </span>
+                      </span>
+                    </DropdownMenuLabel>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem
+                      onSelect={() => setChangingPassword(true)}
+                    >
+                      <KeyRound />
+                      Change password
+                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuLabel className="px-3 py-1 text-xs font-medium text-muted-foreground">
+                      Theme
+                    </DropdownMenuLabel>
+
+                    <DropdownMenuRadioGroup
+                      value={themePreference}
+                      onValueChange={(value) =>
+                        setThemePreference(value as ThemePreference)
+                      }
+                    >
+                      {themeOptions.map((option) => (
+                        <DropdownMenuRadioItem
+                          key={option.value}
+                          value={option.value}
+                          // Keep the menu open so the change can be seen and undone.
+                          onSelect={(event) => event.preventDefault()}
+                        >
+                          <option.icon />
+                          {option.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem onSelect={logout}>
+                      <LogOut />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </div>
@@ -183,7 +225,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className={cn('flex', belowHeaderMinHeight)}>
         <aside
           className={cn(
-            'fixed left-0 z-20 flex w-70 max-w-[85vw] flex-col overflow-hidden bg-[linear-gradient(180deg,#1495cf_0%,#1f9dd3_38%,#2ba6d8_100%)] text-white shadow-[24px_0_80px_-36px_rgba(8,47,73,0.4)] transition-transform duration-300 lg:translate-x-0',
+            'fixed left-0 z-20 flex w-70 max-w-[85vw] flex-col overflow-hidden bg-(image:--sidebar-backdrop) text-white shadow-[24px_0_80px_-36px_rgba(8,47,73,0.4)] transition-transform duration-300 lg:translate-x-0',
             headerOffset,
             belowHeaderHeight,
             sidebarWidthClassName,
@@ -208,7 +250,7 @@ export function AppShell({ children }: AppShellProps) {
                       className={cn(
                         'flex items-center gap-3 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors',
                         isActive
-                          ? 'border-white bg-white text-sky-700 shadow-[0_14px_26px_-22px_rgba(3,105,161,0.85)]'
+                          ? 'border-sidebar-primary bg-sidebar-primary text-sidebar-primary-foreground shadow-[0_14px_26px_-22px_rgba(3,105,161,0.85)]'
                           : 'border-white/55 bg-white/6 text-white/90 hover:bg-white/12',
                         sidebarCollapsed && 'justify-center px-3',
                       )}

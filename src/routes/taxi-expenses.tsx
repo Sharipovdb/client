@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button'
 import {
   Card,
   CardDescription,
-  CardEyebrow,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -187,22 +186,21 @@ function TaxiExpensesPage() {
         <Card>
           <CardHeader className="flex-row items-start justify-between gap-4">
             <div>
-              <CardEyebrow>Reimbursements</CardEyebrow>
-              <CardTitle className="mt-2">Amend Taxi Expense</CardTitle>
+              <CardTitle>Amend Taxi Expense</CardTitle>
             </div>
 
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
               <Receipt className="size-5" />
             </div>
           </CardHeader>
 
           {!editingExpense ? (
-            <p className="mt-6 rounded-2xl bg-sky-50/60 px-4 py-8 text-center text-sm text-slate-500">
+            <p className="mt-6 rounded-2xl bg-muted/60 px-4 py-8 text-center text-sm text-muted-foreground">
               No expense selected.
             </p>
           ) : (
             <form className="mt-2 space-y-5" onSubmit={onSubmit}>
-              <dl className="space-y-2 rounded-2xl bg-sky-50/60 p-4 text-sm">
+              <dl className="space-y-2 rounded-2xl bg-muted/60 p-4 text-sm">
                 <Summary
                   label="Day"
                   value={editingDay ? formatDayLabel(editingDay.date) : '—'}
@@ -244,13 +242,13 @@ function TaxiExpensesPage() {
               </Field>
 
               {formError && (
-                <p className="text-xs font-medium text-red-500">{formError}</p>
+                <p className="text-xs font-medium text-destructive">{formError}</p>
               )}
 
               <div className="flex flex-wrap gap-3 pt-2">
                 <Button
                   type="submit"
-                  className="h-11 rounded-2xl bg-sky-600 px-5 text-white hover:bg-sky-700"
+                  className="h-11 rounded-2xl px-5"
                   disabled={isSubmitting}
                 >
                   <PencilLine className="size-4" />
@@ -260,7 +258,7 @@ function TaxiExpensesPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 rounded-2xl border-sky-100 px-5 text-slate-700"
+                  className="h-11 rounded-2xl border-border px-5 text-soft-foreground"
                   onClick={resetForm}
                 >
                   Cancel
@@ -272,10 +270,9 @@ function TaxiExpensesPage() {
       )}
 
       <Card>
-        <CardHeader className="flex-col gap-4 border-b border-sky-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <CardHeader className="flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <CardEyebrow>Taxi expenses</CardEyebrow>
-            <CardTitle className="mt-2">
+            <CardTitle>
               {formatMonthLabel(period.year, period.month)}
             </CardTitle>
             <CardDescription className="mt-2">
@@ -323,7 +320,7 @@ function TaxiExpensesPage() {
 
                 return (
                   <TableRow key={expense.id}>
-                    <TableCell className="font-medium text-slate-900">
+                    <TableCell className="font-medium text-foreground">
                       {day ? formatDayLabel(day.date) : '—'}
                     </TableCell>
                     <TableCell>{day ? getCrewName(day.crewId) : '—'}</TableCell>
@@ -340,7 +337,7 @@ function TaxiExpensesPage() {
                           type="button"
                           variant="outline"
                           size="icon-sm"
-                          className="rounded-full border-sky-100 text-sky-700"
+                          className="rounded-full border-border text-accent-foreground"
                           disabled={isPaid}
                           onClick={() => startEdit(expense.id)}
                           title={isPaid ? 'Already paid' : 'Amend'}
@@ -357,7 +354,7 @@ function TaxiExpensesPage() {
                 <TableRow>
                   <TableCell
                     colSpan={canUpdateExpense ? 6 : 5}
-                    className="py-10 text-center text-slate-400"
+                    className="py-10 text-center text-faint-foreground"
                   >
                     No taxi expenses recorded for this period.
                   </TableCell>
@@ -374,8 +371,8 @@ function TaxiExpensesPage() {
 function Summary({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className="font-medium text-slate-700">{value}</dd>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-medium text-soft-foreground">{value}</dd>
     </div>
   )
 }
@@ -390,11 +387,11 @@ interface FieldProps {
 function Field({ label, htmlFor, error, children }: FieldProps) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700" htmlFor={htmlFor}>
+      <label className="text-sm font-medium text-soft-foreground" htmlFor={htmlFor}>
         {label}
       </label>
       {children}
-      {error && <p className="text-xs font-medium text-red-500">{error}</p>}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
     </div>
   )
 }
