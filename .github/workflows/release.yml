@@ -1,0 +1,110 @@
+# Builds the Windows installer on every push to main and publishes it as a
+# GitHub Release. Installed apps poll Releases (electron-updater reads
+# latest.yml) and update themselves, so every merge to main reaches users.
+# Pull requests into main only run the build, so a broken build shows up
+# before the merge.
+name: Release desktop app
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  pull_request:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+# A PR build must never cancel a release in progress, so PRs get their own group.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'release' }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      # Without it the installer would silently talk to http://localhost:8080.
+      - name: Check VITE_API_BASE_URL
+        if: vars.VITE_API_BASE_URL == ''
+        run: |
+          echo "::error::Repository variable VITE_API_BASE_URL is empty. Add it in Settings → Secrets and variables → Actions → Variables."
+          exit 1
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # The version only lives in this build; nothing is committed back.
+      - name: Set version
+        id: version
+        run: |
+          version="0.1.${{ github.run_number }}"
+          npm version "$version" --no-git-tag-version
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build frontend
+        run: npx vite build
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+
+      - name: Build installer
+        run: npx electron-builder --win --publish never
+
+      - name: Check update metadata
+        run: |
+          grep -qx "version: ${{ steps.version.outputs.version }}" release/latest.yml
+          cat release/latest.yml
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: installer
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            release/*.exe
+            release/*.exe.blockmap
+            release/latest.yml
+
+  # Kept separate so a protected environment (required reviewers) can be added
+  # here later: uncomment `environment` and create it in Settings → Environments.
+  publish:
+    needs: build
+    # Only main ships: not PR builds, not a manual run started on another branch.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # environment: production
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: v${{ needs.build.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: installer
+          path: installer
+
+      # Created as a draft and published only after every asset is uploaded, so
+      # an installed app never sees a release without latest.yml.
+      - name: Create GitHub Release
+        run: |
+          gh release create "$TAG" installer/* \
+            --draft \
+            --target "$GITHUB_SHA" \
+            --title "CrewMove ${{ needs.build.outputs.version }}" \
+            --generate-notes
+          gh release edit "$TAG" --draft=false --latest
