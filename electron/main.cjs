@@ -1,10 +1,12 @@
 // Electron main process. CommonJS because package.json has "type": "module".
 const path = require('node:path')
 const { pathToFileURL } = require('node:url')
-const { app, BrowserWindow, net, protocol, shell } = require('electron')
+const { app, BrowserWindow, Menu, net, protocol, shell } = require('electron')
 const log = require('electron-log/main')
 
 const { resolveDistFile } = require('./dist-protocol.cjs')
+const { buildAppMenu } = require('./menu.cjs')
+const { initAutoUpdater } = require('./updater.cjs')
 
 // The built frontend is served from a custom scheme instead of file:// so the
 // Vite build works with its default base "/" and API requests carry a stable
@@ -54,7 +56,9 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(() => {
     app.setAppUserModelId('com.srp.crewmove')
     registerAppProtocol()
+    Menu.setApplicationMenu(buildAppMenu(() => mainWindow))
     createMainWindow()
+    initAutoUpdater(() => mainWindow)
   })
 
   app.on('window-all-closed', () => {
