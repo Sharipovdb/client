@@ -80,6 +80,9 @@ function LoginPage() {
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">
             Sign in
           </h1>
+          <p className="text-sm text-muted-foreground">
+            Welcome to CrewMove. Use your work account to continue.
+          </p>
         </div>
 
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
