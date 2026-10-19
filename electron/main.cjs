@@ -20,7 +20,9 @@ const startUrl = app.isPackaged ? `${APP_ORIGIN}/` : DEV_SERVER_URL
 const startOrigin = urlOrigin(startUrl)
 
 log.errorHandler.startCatching()
-log.info(`Starting CrewMove ${app.getVersion()} (Electron ${process.versions.electron}), packaged=${app.isPackaged}`)
+log.info(
+  `Starting CrewMove ${app.getVersion()} (Electron ${process.versions.electron}), packaged=${app.isPackaged}`,
+)
 
 // Must run before app is ready.
 protocol.registerSchemesAsPrivileged([
@@ -132,12 +134,19 @@ function createMainWindow() {
     log.info(`Loaded ${webContents.getURL()}`)
   })
 
-  webContents.on('did-fail-load',(_event, errorCode, errorDescription, validatedUrl) => {
-    log.error(`Failed to load ${validatedUrl}: ${errorCode} ${errorDescription}`)
-  })
+  webContents.on(
+    'did-fail-load',
+    (_event, errorCode, errorDescription, validatedUrl) => {
+      log.error(
+        `Failed to load ${validatedUrl}: ${errorCode} ${errorDescription}`,
+      )
+    },
+  )
 
   webContents.on('render-process-gone', (_event, details) => {
-    log.error(`Renderer process gone: ${details.reason} (exit code ${details.exitCode})`)
+    log.error(
+      `Renderer process gone: ${details.reason} (exit code ${details.exitCode})`,
+    )
   })
 
   mainWindow.loadURL(startUrl)
@@ -169,7 +178,9 @@ function openExternal(url) {
   }
 
   if (['http:', 'https:', 'mailto:'].includes(protocolName)) {
-    shell.openExternal(url).catch((error) => log.error(`openExternal failed for ${url}`, error))
+    shell
+      .openExternal(url)
+      .catch((error) => log.error(`openExternal failed for ${url}`, error))
   } else {
     log.warn(`Refused to open external URL: ${url}`)
   }

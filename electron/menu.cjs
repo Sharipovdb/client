@@ -42,7 +42,10 @@ function buildAppMenu(getMainWindow) {
     {
       label: 'Справка',
       submenu: [
-        { label: 'Проверить обновления…', click: () => checkForUpdatesManually() },
+        {
+          label: 'Проверить обновления…',
+          click: () => checkForUpdatesManually(),
+        },
         { label: 'Открыть папку логов', click: () => openLogsFolder() },
         { type: 'separator' },
         { label: 'О программе', click: () => showAbout(getMainWindow()) },
@@ -80,7 +83,9 @@ function showAbout(window) {
     buttons: ['OK'],
   }
 
-  return window ? dialog.showMessageBox(window, options) : dialog.showMessageBox(options)
+  return window
+    ? dialog.showMessageBox(window, options)
+    : dialog.showMessageBox(options)
 }
 
 module.exports = { buildAppMenu }

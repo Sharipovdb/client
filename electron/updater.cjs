@@ -51,7 +51,8 @@ async function promptRestart(version) {
     type: 'info',
     title: 'Обновление CrewMove',
     message: `Доступна новая версия ${version}.`,
-    detail: 'Перезапустить приложение для установки?\nЕсли выбрать «Позже», обновление установится при выходе из приложения.',
+    detail:
+      'Перезапустить приложение для установки?\nЕсли выбрать «Позже», обновление установится при выходе из приложения.',
     buttons: ['Перезапустить', 'Позже'],
     defaultId: 0,
     cancelId: 1,
@@ -73,7 +74,8 @@ async function checkForUpdatesManually() {
     await showMessage({
       type: 'info',
       title: 'Проверка обновлений',
-      message: 'Проверка обновлений работает только в установленном приложении.',
+      message:
+        'Проверка обновлений работает только в установленном приложении.',
     })
     return
   }
@@ -91,7 +93,8 @@ async function checkForUpdatesManually() {
         type: 'info',
         title: 'Проверка обновлений',
         message: `Найдена версия ${result.updateInfo.version}, загружается…`,
-        detail: 'Когда загрузка завершится, приложение предложит перезапуститься.',
+        detail:
+          'Когда загрузка завершится, приложение предложит перезапуститься.',
       })
     } else {
       await showMessage({
@@ -113,7 +116,9 @@ async function checkForUpdatesManually() {
 
 function showMessage(options) {
   const window = getWindow()
-  return window ? dialog.showMessageBox(window, options) : dialog.showMessageBox(options)
+  return window
+    ? dialog.showMessageBox(window, options)
+    : dialog.showMessageBox(options)
 }
 
 module.exports = { initAutoUpdater, checkForUpdatesManually }
