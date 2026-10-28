@@ -45,7 +45,6 @@ describe('page access', () => {
   })
 
   it('crew lead works its crew, not payroll or the directory', () => {
-    expect(canAccessPath([...crewLead], monthlySheets)).toBe(false)
     expect(canAccessPath([...crewLead], taxiExpenses)).toBe(true)
     expect(canAccessPath([...crewLead], payouts)).toBe(false)
     expect(canAccessPath([...crewLead], employees)).toBe(false)
@@ -58,9 +57,9 @@ describe('page access', () => {
     expect(canAccessPath([...crewLead], vehicles)).toBe(false)
   })
 
-  it('a driver-lead opens the monthly sheets, a crew lead does not', () => {
+  it('both lead kinds open the monthly sheets of their crew', () => {
     expect(canAccessPath([...driverLead], monthlySheets)).toBe(true)
-    expect(canAccessPath([...crewLead], monthlySheets)).toBe(false)
+    expect(canAccessPath([...crewLead], monthlySheets)).toBe(true)
   })
 
   it('accountant sees the finance pages but not the directory', () => {
@@ -82,9 +81,8 @@ describe('page access', () => {
 })
 
 describe('capabilities', () => {
-  // The sheet is the accountant's from end to end, mirroring
-  // MonthlyTransportSheetsController's RoleAuthorize(Accountant, Admin). A lead never
-  // touches it — they cannot even open the page.
+  // Pricing, confirming and paying the sheet stay the accountant's, as on the backend's
+  // Generate, Confirm and MarkPaid. A lead only reads it and enters their own advance.
   it('the accountant owns the sheet; a lead does not', () => {
     expect(hasCapability([...accountant], 'generateSheet')).toBe(true)
     expect(hasCapability([...accountant], 'confirmSheet')).toBe(true)
@@ -101,7 +99,7 @@ describe('capabilities', () => {
     expect(hasCapability([...worker], 'viewFinance')).toBe(false)
   })
 
-  it('a driver-lead reads the monthly sheet without acting on it', () => {
+  it('a lead reads the monthly sheet without settling it', () => {
     for (const capability of [
       'generateSheet',
       'confirmSheet',
@@ -110,8 +108,18 @@ describe('capabilities', () => {
       'printSheet',
     ] as const) {
       expect(hasCapability([...driverLead], capability)).toBe(false)
+      expect(hasCapability([...crewLead], capability)).toBe(false)
       expect(hasCapability([...accountant], capability)).toBe(true)
     }
+  })
+
+  it('both lead kinds enter their advance, as does whoever prices the sheet', () => {
+    expect(hasCapability([...crewLead], 'setOpeningBalance')).toBe(true)
+    expect(hasCapability([...driverLead], 'setOpeningBalance')).toBe(true)
+    expect(hasCapability([...accountant], 'setOpeningBalance')).toBe(true)
+    expect(hasCapability([...admin], 'setOpeningBalance')).toBe(true)
+    expect(hasCapability([...routeManager], 'setOpeningBalance')).toBe(false)
+    expect(hasCapability([...worker], 'setOpeningBalance')).toBe(false)
   })
 
   it('only accountant/admin settle a crew payout', () => {

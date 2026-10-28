@@ -35,8 +35,8 @@ const {
 // Derived from the roles in the spec:
 // - Route Manager assigns people to crews and routes; no financial screens.
 // - Crew leads (manager or driver) log days and the taxi fares that go with them.
-//   A driver-lead may read the monthly sheets of their crew; settling a month stays
-//   the accountant's.
+//   Either kind may read the monthly sheets of their crew and enter the advance they
+//   were handed; pricing and settling a month stays the accountant's.
 // - The accountant "sees all" for reconciliation.
 // - A worker only notifies absence, so they get the dashboard until an Absences page exists.
 // Employees (login accounts + business profile in one, backed by /api/User) is where
@@ -63,7 +63,7 @@ const rolePagePaths: Partial<Record<AppRole, ReadonlyArray<string>>> = {
     vehicles,
     taxiExpenses,
   ],
-  CrewLead: [dashboard, transportDays, taxiExpenses],
+  CrewLead: [dashboard, transportDays, taxiExpenses, monthlySheets],
   DriverLead: [dashboard, transportDays, taxiExpenses, monthlySheets],
   Accountant: [
     dashboard,
@@ -107,6 +107,10 @@ export type Capability =
   | 'deleteSheet' // drops a draft entirely; a paid sheet is final and neither applies
   | 'paySheet' // release a crew's month to its lead; a lead confirms but never pays
   | 'printSheet'
+  // The advance a lead was handed. Unlike the rest of the sheet a lead may enter it
+  // themselves, but only on a draft the accountant already generated — the backend's
+  // SetOpeningBalance changes nothing else, and confirming still checks it.
+  | 'setOpeningBalance'
 
   // Transport days. A logged day needs no sign-off — its kilometres are known from the
   // crew's route — so there is nothing to confirm here.
@@ -164,6 +168,7 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'deleteSheet',
     'paySheet',
     'printSheet',
+    'setOpeningBalance',
 
     'resetPassword',
   ],
@@ -182,6 +187,8 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'deleteTransportDay',
 
     'updateTaxiExpense',
+
+    'setOpeningBalance',
   ],
   DriverLead: [
     'createTransportDay',
@@ -189,6 +196,8 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'deleteTransportDay',
 
     'updateTaxiExpense',
+
+    'setOpeningBalance',
   ],
   Accountant: [
     'createTariff',
@@ -201,6 +210,7 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'deleteSheet',
     'paySheet',
     'printSheet',
+    'setOpeningBalance',
   ],
 }
 

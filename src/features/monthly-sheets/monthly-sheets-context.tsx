@@ -132,6 +132,10 @@ interface MonthlySheetsContextValue {
   isLoading: boolean
   getSheet: (period: SheetPeriod) => MonthlySheet | undefined
   generateSheet: (period: PricedSheetPeriod) => Promise<MonthlySheet>
+  setOpeningBalance: (
+    sheetId: number,
+    openingBalance: number | null,
+  ) => Promise<void>
   confirmSheet: (sheetId: number) => Promise<void>
   unconfirmSheet: (sheetId: number) => Promise<void>
   markSheetPaid: (sheetId: number) => Promise<void>
@@ -179,6 +183,25 @@ export function MonthlySheetsProvider({ children }: { children: ReactNode }) {
     onSuccess: invalidate,
   })
 
+  // A lead enters their advance on a draft without repricing it: the index and the
+  // closing date stay exactly as the accountant saved them.
+  const openingBalanceMutation = useMutation({
+    mutationFn: ({
+      sheetId,
+      openingBalance,
+    }: {
+      sheetId: number
+      openingBalance: number | null
+    }) =>
+      apiClient.put(
+        `/api/MonthlyTransportSheets/SetOpeningBalance/${sheetId}`,
+        {
+          openingBalance,
+        },
+      ),
+    onSuccess: invalidate,
+  })
+
   const confirmMutation = useMutation({
     mutationFn: (sheetId: number) =>
       apiClient.put(`/api/MonthlyTransportSheets/Confirm/${sheetId}`),
@@ -213,6 +236,9 @@ export function MonthlySheetsProvider({ children }: { children: ReactNode }) {
       isLoading,
       getSheet: (period) => sheets.find((sheet) => isSamePeriod(sheet, period)),
       generateSheet: (period) => generateMutation.mutateAsync(period),
+      setOpeningBalance: async (sheetId, openingBalance) => {
+        await openingBalanceMutation.mutateAsync({ sheetId, openingBalance })
+      },
       confirmSheet: async (sheetId) => {
         await confirmMutation.mutateAsync(sheetId)
       },
@@ -230,6 +256,7 @@ export function MonthlySheetsProvider({ children }: { children: ReactNode }) {
       sheets,
       isLoading,
       generateMutation,
+      openingBalanceMutation,
       confirmMutation,
       unconfirmMutation,
       markPaidMutation,

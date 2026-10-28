@@ -117,6 +117,7 @@ function MonthlySheetsPage() {
     isLoading,
     getSheet,
     generateSheet,
+    setOpeningBalance,
     confirmSheet,
     unconfirmSheet,
     markSheetPaid,
@@ -254,6 +255,13 @@ function MonthlySheetsPage() {
 
   const isPricingLocked = !canPriceSheet || (sheet?.isConfirmed ?? false)
 
+  // A lead enters only the advance, and only into a draft the accountant has already
+  // generated: there is no month to hold it before that.
+  const entersBalanceOnly = !canPriceSheet && can('setOpeningBalance')
+  const isBalanceLocked = entersBalanceOnly
+    ? sheet === undefined || sheet.isConfirmed
+    : isPricingLocked
+
   function selectCrew(nextCrewId: number) {
     setCrewId(nextCrewId)
     setActionError('')
@@ -307,6 +315,11 @@ function MonthlySheetsPage() {
         periodEnd: closingDate,
       })
     }, 'Could not generate the sheet.')
+
+  const handleSaveBalance = () =>
+    run(async () => {
+      if (sheet) await setOpeningBalance(sheet.id, openingBalance)
+    }, 'Could not save the opening balance.')
 
   const handleConfirm = () =>
     run(async () => {
@@ -405,7 +418,7 @@ function MonthlySheetsPage() {
                 inputMode="decimal"
                 placeholder="Paid at month end"
                 value={openingBalanceText}
-                disabled={isPricingLocked}
+                disabled={isBalanceLocked}
                 onChange={(event) => editBalance(event.target.value)}
               />
             </div>
@@ -432,9 +445,16 @@ function MonthlySheetsPage() {
           </div>
         </CardHeader>
 
-        {!isPricingLocked && unappliedInputs.length > 0 && (
+        {!isBalanceLocked && unappliedInputs.length > 0 && (
           <p className="mt-4 text-sm font-medium text-warning">
-            {`The ${unappliedInputs.join(' and ')} ${unappliedInputs.length > 1 ? 'have' : 'has'} not been applied yet — save the sheet to use ${unappliedInputs.length > 1 ? 'them' : 'it'}.`}
+            {`The ${unappliedInputs.join(' and ')} ${unappliedInputs.length > 1 ? 'have' : 'has'} not been applied yet — save ${entersBalanceOnly ? 'it' : `the sheet to use ${unappliedInputs.length > 1 ? 'them' : 'it'}`}.`}
+          </p>
+        )}
+
+        {entersBalanceOnly && crew && !isLoading && !sheet && (
+          <p className="mt-4 text-sm text-faint-foreground">
+            The accountant has not generated this month yet — the opening
+            balance can be entered once they do.
           </p>
         )}
       </Card>
@@ -503,6 +523,19 @@ function MonthlySheetsPage() {
                     <Sparkles className="size-3.5" />
                   )}
                   {sheet ? 'Save' : 'Generate & Save'}
+                </Button>
+              )}
+
+              {sheet && entersBalanceOnly && hasUnappliedBalance && (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="rounded-full"
+                  disabled={isBusy}
+                  onClick={handleSaveBalance}
+                >
+                  <Save className="size-3.5" />
+                  Save balance
                 </Button>
               )}
 
