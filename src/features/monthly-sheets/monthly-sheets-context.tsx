@@ -46,6 +46,7 @@ interface MonthlySheetApiDto {
   totalTariffAmount: number
   totalDrivingAmount: number
   totalPayable: number
+  totalPayout: number
   balance: number | null
 }
 
@@ -54,7 +55,7 @@ interface PaginatedResult<T> {
   totalCount: number
 }
 
-const MONTHLY_SHEETS_QUERY_KEY = ['monthly-sheets']
+export const MONTHLY_SHEETS_QUERY_KEY = ['monthly-sheets']
 
 function toMonthlySheet(dto: MonthlySheetApiDto): MonthlySheet {
   return {

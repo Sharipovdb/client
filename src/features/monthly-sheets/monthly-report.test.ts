@@ -77,6 +77,7 @@ function aSheet(overrides: Partial<MonthlySheet> = {}): MonthlySheet {
     totalTariffAmount,
     totalDrivingAmount,
     totalPayable: totalDrivingAmount + totalTaxiAmount + amortizationAmount,
+    totalPayout: totalDrivingAmount + totalTaxiAmount + amortizationAmount,
     balance: null,
     ...overrides,
     days,

@@ -122,6 +122,15 @@ describe('capabilities', () => {
     expect(hasCapability([...worker], 'setOpeningBalance')).toBe(false)
   })
 
+  it('only accountant/admin record the money received for the month', () => {
+    expect(hasCapability([...accountant], 'setAccountantBalance')).toBe(true)
+    expect(hasCapability([...admin], 'setAccountantBalance')).toBe(true)
+    expect(hasCapability([...crewLead], 'setAccountantBalance')).toBe(false)
+    expect(hasCapability([...driverLead], 'setAccountantBalance')).toBe(false)
+    expect(hasCapability([...routeManager], 'setAccountantBalance')).toBe(false)
+    expect(hasCapability([...worker], 'setAccountantBalance')).toBe(false)
+  })
+
   it('only accountant/admin settle a crew payout', () => {
     expect(hasCapability([...accountant], 'paySheet')).toBe(true)
     expect(hasCapability([...admin], 'paySheet')).toBe(true)

@@ -17,8 +17,10 @@ import {
 } from '@/components/ui/table'
 import { usePermissions } from '@/features/auth/use-permissions'
 import { useCrews } from '@/features/crews/crews-context'
+import { AccountantBalanceCard } from '@/features/monthly-sheets/accountant-balance-card'
 import { useMonthlySheets } from '@/features/monthly-sheets/monthly-sheets-context'
 import { PaySheetDialog } from '@/features/monthly-sheets/pay-sheet-dialog'
+import { payoutTotals } from '@/features/monthly-sheets/payout-totals'
 import {
   isPayable,
   SheetStatusBadge,
@@ -65,15 +67,10 @@ function PayoutsPage() {
     [sheets, period, getCrewName],
   )
 
-  // Money already released is excluded from what still has to be paid out.
-  const grandTotal = sheetsInPeriod.reduce(
-    (total, sheet) => total + sheet.totalPayable,
-    0,
-  )
-  const outstandingTotal = sheetsInPeriod.reduce(
-    (total, sheet) => (sheet.isPaid ? total : total + sheet.totalPayable),
-    0,
-  )
+  // The grand total is what the month's crews cost, advances included; money already
+  // released, and the advances handed out at the start of the month, are excluded from
+  // what still has to be paid out.
+  const { totalPayout, stillToPay } = payoutTotals(sheetsInPeriod)
 
   async function handlePay(sheet: MonthlySheet) {
     setActionError('')
@@ -119,6 +116,11 @@ function PayoutsPage() {
         )}
       </Card>
 
+      <AccountantBalanceCard
+        key={`${period.year}-${period.month}`}
+        period={period}
+      />
+
       <Card>
         {isLoading ? (
           <p className="py-10 text-center text-faint-foreground">Loading…</p>
@@ -138,7 +140,7 @@ function PayoutsPage() {
                 <TableHead className="text-center">Days</TableHead>
                 <TableHead className="text-right">Driven km</TableHead>
                 <TableHead className="text-right">Extra business km</TableHead>
-                <TableHead className="text-right">Amount payable</TableHead>
+                <TableHead className="text-right">Payout</TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -168,7 +170,12 @@ function PayoutsPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right font-semibold text-foreground">
-                    {formatCurrency(sheet.totalPayable)}
+                    {formatCurrency(sheet.totalPayout)}
+                    {sheet.openingBalance !== null && (
+                      <span className="block text-xs font-normal text-muted-foreground">
+                        incl. advance {formatCurrency(sheet.openingBalance)}
+                      </span>
+                    )}
                   </TableCell>
 
                   {/* Where the sheet stands, and what can still be done to it, are two
@@ -212,7 +219,7 @@ function PayoutsPage() {
                   Grand total
                 </TableCell>
                 <TableCell className="text-right text-base font-semibold text-accent-foreground">
-                  {formatCurrency(grandTotal)}
+                  {formatCurrency(totalPayout)}
                 </TableCell>
                 <TableCell
                   className="text-right text-xs font-normal text-muted-foreground"
@@ -220,7 +227,7 @@ function PayoutsPage() {
                 >
                   Still to pay:{' '}
                   <span className="font-medium text-soft-foreground">
-                    {formatCurrency(outstandingTotal)}
+                    {formatCurrency(stillToPay)}
                   </span>
                 </TableCell>
               </TableRow>
