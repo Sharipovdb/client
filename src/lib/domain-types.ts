@@ -275,6 +275,9 @@ export interface MonthlySheet {
   totalDrivingAmount: number
   // With an opening balance, only the overspend and the car allowance are left to pay.
   totalPayable: number
+  // What the crew costs the month: `totalPayable` plus the opening balance handed out at
+  // its start. This, not `totalPayable`, is what Payouts adds up across crews.
+  totalPayout: number
   // The opening balance less the month's trips and fares; negative once overspent.
   balance: number | null
 }

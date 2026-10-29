@@ -1,6 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import {
-  Bell,
   ChevronDown,
   ChevronLeft,
   KeyRound,
@@ -29,6 +28,7 @@ import {
 import { changeOwnPassword } from '@/features/account/change-own-password'
 import { PasswordDialog } from '@/features/account/password-dialog'
 import { useAuth } from '@/features/auth/auth-context'
+import { MessagesBell } from '@/features/messages/messages-bell'
 import { roleLabels } from '@/lib/app-types'
 import { useThemePreference } from '@/lib/theme'
 import type { ThemePreference } from '@/lib/theme'
@@ -104,14 +104,7 @@ export function AppShell({ children }: AppShellProps) {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
-              <Button
-                variant="outline"
-                size="icon"
-                className="hidden rounded-full border-border text-primary sm:inline-flex"
-                title="Notifications"
-              >
-                <Bell className="size-4" />
-              </Button>
+              <MessagesBell />
 
               {session && (
                 // Non-modal so opening the password dialog from an item does not fight

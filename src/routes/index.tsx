@@ -119,7 +119,7 @@ function DashboardPage() {
   )
 
   const totalPayout = crewData.reduce(
-    (total, row) => total + (row.sheet?.totalPayable ?? 0),
+    (total, row) => total + (row.sheet?.totalPayout ?? 0),
     0,
   )
   const draftSheets = crewData.filter(
@@ -252,7 +252,7 @@ function DashboardPage() {
                         </TableCell>
                         {showFinance && (
                           <TableCell className="text-right">
-                            {sheet ? formatCurrency(sheet.totalPayable) : '—'}
+                            {sheet ? formatCurrency(sheet.totalPayout) : '—'}
                           </TableCell>
                         )}
                       </TableRow>

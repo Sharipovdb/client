@@ -111,6 +111,13 @@ export type Capability =
   // themselves, but only on a draft the accountant already generated — the backend's
   // SetOpeningBalance changes nothing else, and confirming still checks it.
   | 'setOpeningBalance'
+  // The money the accountant received for the month to pay every crew from, entered on
+  // Payouts. The backend gates AccountantBalance/Set with Accountant and Admin.
+  | 'setAccountantBalance'
+
+  // Messages behind the bell. Everyone reads them; writing one is the accountant's and
+  // the admin's, as on the backend's Messages/Create.
+  | 'sendMessage'
 
   // Transport days. A logged day needs no sign-off — its kilometres are known from the
   // crew's route — so there is nothing to confirm here.
@@ -169,6 +176,9 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'paySheet',
     'printSheet',
     'setOpeningBalance',
+    'setAccountantBalance',
+
+    'sendMessage',
 
     'resetPassword',
   ],
@@ -211,6 +221,9 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'paySheet',
     'printSheet',
     'setOpeningBalance',
+    'setAccountantBalance',
+
+    'sendMessage',
   ],
 }
 
