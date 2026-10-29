@@ -115,6 +115,10 @@ export type Capability =
   // Payouts. The backend gates AccountantBalance/Set with Accountant and Admin.
   | 'setAccountantBalance'
 
+  // Messages behind the bell. Everyone reads them; writing one is the accountant's and
+  // the admin's, as on the backend's Messages/Create.
+  | 'sendMessage'
+
   // Transport days. A logged day needs no sign-off — its kilometres are known from the
   // crew's route — so there is nothing to confirm here.
   | 'createTransportDay'
@@ -174,6 +178,8 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'setOpeningBalance',
     'setAccountantBalance',
 
+    'sendMessage',
+
     'resetPassword',
   ],
   RouteManager: [
@@ -216,6 +222,8 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'printSheet',
     'setOpeningBalance',
     'setAccountantBalance',
+
+    'sendMessage',
   ],
 }
 

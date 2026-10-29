@@ -122,6 +122,15 @@ describe('capabilities', () => {
     expect(hasCapability([...worker], 'setOpeningBalance')).toBe(false)
   })
 
+  it('only accountant/admin write messages; everyone else only reads them', () => {
+    expect(hasCapability([...accountant], 'sendMessage')).toBe(true)
+    expect(hasCapability([...admin], 'sendMessage')).toBe(true)
+    expect(hasCapability([...crewLead], 'sendMessage')).toBe(false)
+    expect(hasCapability([...driverLead], 'sendMessage')).toBe(false)
+    expect(hasCapability([...routeManager], 'sendMessage')).toBe(false)
+    expect(hasCapability([...worker], 'sendMessage')).toBe(false)
+  })
+
   it('only accountant/admin record the money received for the month', () => {
     expect(hasCapability([...accountant], 'setAccountantBalance')).toBe(true)
     expect(hasCapability([...admin], 'setAccountantBalance')).toBe(true)
