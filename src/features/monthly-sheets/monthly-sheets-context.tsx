@@ -73,11 +73,11 @@ export interface SheetPeriod {
 }
 
 /**
- * A period plus the index its kilometres are priced with. The rate is the one figure
- * the backend cannot derive from the log, so it travels with every request that prices
- * a month — and the server, not this client, does the multiplying.
+ * What the accountant enters on a crew's month. The draft itself is opened by the
+ * backend with the first logged day, so these are the only figures it cannot derive
+ * from the log — and the server, not this client, does the multiplying.
  */
-export interface PricedSheetPeriod extends SheetPeriod {
+export interface SheetSettings {
   kmRate: number
   /**
    * What the lead was handed at the start of the month. `null` settles the month in
@@ -101,38 +101,14 @@ async function fetchSheets() {
   return response.data.items.map(toMonthlySheet)
 }
 
-async function fetchPreview(period: PricedSheetPeriod) {
-  const response = await apiClient.post<MonthlySheetApiDto>(
-    '/api/MonthlyTransportSheets/GetPreview',
-    period,
-  )
-
-  return toMonthlySheet(response.data)
-}
-
-/**
- * What generating this period would produce, computed server-side and saved nowhere.
- * Passing `null` disables it — a month that already has a saved sheet reads that sheet
- * instead, and the record must never be second-guessed by a recalculation.
- *
- * It is keyed under the sheets key so generating, confirming or deleting a sheet
- * refreshes the preview with everything else. The index is part of the key: changing it
- * is a different month's worth of money and has to be recomputed.
- */
-export function useMonthlySheetPreview(period: PricedSheetPeriod | null) {
-  return useQuery({
-    queryKey: [...MONTHLY_SHEETS_QUERY_KEY, 'preview', period],
-    queryFn: () => fetchPreview(period!),
-    enabled: period !== null,
-    retry: false,
-  })
-}
-
 interface MonthlySheetsContextValue {
   sheets: MonthlySheet[]
   isLoading: boolean
   getSheet: (period: SheetPeriod) => MonthlySheet | undefined
-  generateSheet: (period: PricedSheetPeriod) => Promise<MonthlySheet>
+  updateSheet: (
+    sheetId: number,
+    settings: SheetSettings,
+  ) => Promise<MonthlySheet>
   setOpeningBalance: (
     sheetId: number,
     openingBalance: number | null,
@@ -140,7 +116,6 @@ interface MonthlySheetsContextValue {
   confirmSheet: (sheetId: number) => Promise<void>
   unconfirmSheet: (sheetId: number) => Promise<void>
   markSheetPaid: (sheetId: number) => Promise<void>
-  deleteSheet: (sheetId: number) => Promise<void>
 }
 
 const MonthlySheetsContext = createContext<MonthlySheetsContextValue | null>(
@@ -172,11 +147,19 @@ export function MonthlySheetsProvider({ children }: { children: ReactNode }) {
     ])
   }
 
-  const generateMutation = useMutation({
-    mutationFn: async (period: PricedSheetPeriod) => {
-      const response = await apiClient.post<MonthlySheetApiDto>(
-        '/api/MonthlyTransportSheets/Generate',
-        period,
+  // Moving the closing date can also move the start of the next month's draft, or open
+  // it for the days left over, so every sheet is refetched rather than this one alone.
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      sheetId,
+      settings,
+    }: {
+      sheetId: number
+      settings: SheetSettings
+    }) => {
+      const response = await apiClient.put<MonthlySheetApiDto>(
+        `/api/MonthlyTransportSheets/Update/${sheetId}`,
+        settings,
       )
 
       return toMonthlySheet(response.data)
@@ -225,18 +208,13 @@ export function MonthlySheetsProvider({ children }: { children: ReactNode }) {
     onSuccess: invalidate,
   })
 
-  const deleteMutation = useMutation({
-    mutationFn: (sheetId: number) =>
-      apiClient.delete(`/api/MonthlyTransportSheets/Delete/${sheetId}`),
-    onSuccess: invalidate,
-  })
-
   const value = useMemo<MonthlySheetsContextValue>(
     () => ({
       sheets,
       isLoading,
       getSheet: (period) => sheets.find((sheet) => isSamePeriod(sheet, period)),
-      generateSheet: (period) => generateMutation.mutateAsync(period),
+      updateSheet: (sheetId, settings) =>
+        updateMutation.mutateAsync({ sheetId, settings }),
       setOpeningBalance: async (sheetId, openingBalance) => {
         await openingBalanceMutation.mutateAsync({ sheetId, openingBalance })
       },
@@ -249,19 +227,15 @@ export function MonthlySheetsProvider({ children }: { children: ReactNode }) {
       markSheetPaid: async (sheetId) => {
         await markPaidMutation.mutateAsync(sheetId)
       },
-      deleteSheet: async (sheetId) => {
-        await deleteMutation.mutateAsync(sheetId)
-      },
     }),
     [
       sheets,
       isLoading,
-      generateMutation,
+      updateMutation,
       openingBalanceMutation,
       confirmMutation,
       unconfirmMutation,
       markPaidMutation,
-      deleteMutation,
     ],
   )
 

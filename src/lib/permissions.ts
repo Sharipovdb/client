@@ -102,9 +102,8 @@ export type Capability =
   // the backend gates the same actions with RoleAuthorize(Accountant, Admin) on
   // MonthlyTransportSheetsController.
   | 'viewFinance' // payout figures and outstanding money on the dashboard
-  | 'generateSheet'
+  | 'priceSheet' // index and closing date of a draft the first logged day opened
   | 'confirmSheet' // signs the month off, and withdraws that signature while unpaid
-  | 'deleteSheet' // drops a draft entirely; a paid sheet is final and neither applies
   | 'paySheet' // release a crew's month to its lead; a lead confirms but never pays
   | 'printSheet'
   // The advance a lead was handed. Unlike the rest of the sheet a lead may enter it
@@ -170,9 +169,8 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'deleteTariff',
 
     'viewFinance',
-    'generateSheet',
+    'priceSheet',
     'confirmSheet',
-    'deleteSheet',
     'paySheet',
     'printSheet',
     'setOpeningBalance',
@@ -215,9 +213,8 @@ const roleCapabilities: Partial<Record<AppRole, ReadonlyArray<Capability>>> = {
     'deleteTariff',
 
     'viewFinance',
-    'generateSheet',
+    'priceSheet',
     'confirmSheet',
-    'deleteSheet',
     'paySheet',
     'printSheet',
     'setOpeningBalance',

@@ -82,13 +82,12 @@ describe('page access', () => {
 
 describe('capabilities', () => {
   // Pricing, confirming and paying the sheet stay the accountant's, as on the backend's
-  // Generate, Confirm and MarkPaid. A lead only reads it and enters their own advance.
+  // Update, Confirm and MarkPaid. A lead only reads it and enters their own advance.
   it('the accountant owns the sheet; a lead does not', () => {
-    expect(hasCapability([...accountant], 'generateSheet')).toBe(true)
+    expect(hasCapability([...accountant], 'priceSheet')).toBe(true)
     expect(hasCapability([...accountant], 'confirmSheet')).toBe(true)
-    expect(hasCapability([...accountant], 'deleteSheet')).toBe(true)
     expect(hasCapability([...crewLead], 'confirmSheet')).toBe(false)
-    expect(hasCapability([...crewLead], 'generateSheet')).toBe(false)
+    expect(hasCapability([...crewLead], 'priceSheet')).toBe(false)
   })
 
   it('money is limited to admin and accountant', () => {
@@ -101,9 +100,8 @@ describe('capabilities', () => {
 
   it('a lead reads the monthly sheet without settling it', () => {
     for (const capability of [
-      'generateSheet',
+      'priceSheet',
       'confirmSheet',
-      'deleteSheet',
       'paySheet',
       'printSheet',
     ] as const) {

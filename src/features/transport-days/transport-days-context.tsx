@@ -47,6 +47,7 @@ interface TransportDayApiDto {
   loggedBy: number
   loggedAt: string
   taxiExpenses: TaxiExpenseApiDto[]
+  isSettled: boolean
 }
 
 interface PaginatedResult<T> {
@@ -100,6 +101,7 @@ function toTransportDay(dto: TransportDayApiDto): TransportDay {
       paidById: expense.paidById,
       status: expense.taxiExpenseStatus,
     })),
+    isSettled: dto.isSettled,
   }
 }
 

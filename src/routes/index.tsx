@@ -125,9 +125,6 @@ function DashboardPage() {
   const draftSheets = crewData.filter(
     (row) => row.sheet && !row.sheet.isConfirmed,
   )
-  const ungeneratedSheets = crewData.filter(
-    (row) => !row.sheet && row.daysLogged > 0,
-  )
   const overflowCrews = crewData.filter(
     (row) => row.members.length > row.crew.seatCapacity,
   )
@@ -169,9 +166,7 @@ function DashboardPage() {
     canOpenSheets: canOpen(appPagePaths.monthlySheets),
     canOpenCrews: canOpen(appPagePaths.crews),
     canConfirm: can('confirmSheet'),
-    canGenerate: can('generateSheet'),
     draftCount: draftSheets.length,
-    ungeneratedCount: ungeneratedSheets.length,
     overflowCount: overflowCrews.length,
   })
 
@@ -325,9 +320,7 @@ interface PendingActionInput {
   canOpenSheets: boolean
   canOpenCrews: boolean
   canConfirm: boolean
-  canGenerate: boolean
   draftCount: number
-  ungeneratedCount: number
   overflowCount: number
 }
 
@@ -342,15 +335,6 @@ function buildPendingActions(input: PendingActionInput): PendingAction[] {
       icon: CalendarCheck,
       tone: 'warning',
       text: `${input.draftCount} sheet(s) awaiting confirmation`,
-    })
-  }
-
-  if (input.canOpenSheets && input.canGenerate && input.ungeneratedCount > 0) {
-    actions.push({
-      to: appPagePaths.monthlySheets,
-      icon: CalendarCheck,
-      tone: 'default',
-      text: `${input.ungeneratedCount} crew(s) with logged days but no sheet generated`,
     })
   }
 

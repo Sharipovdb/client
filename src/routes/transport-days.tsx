@@ -37,6 +37,7 @@ import type { TransportDayChanges } from '@/features/transport-days/transport-da
 import { useTransportDays } from '@/features/transport-days/transport-days-context'
 import { getErrorMessage } from '@/lib/api-error'
 import {
+  dayClosedReason,
   isCrewLedBy,
   isDayOpen,
   isSameId,
@@ -624,8 +625,8 @@ function TransportDaysPage() {
             </TableHeader>
             <TableBody>
               {visibleDays.map((day) => {
-                const isOpen = isDayOpen(day)
-                const closedReason = 'Its taxi fare has already been paid'
+                const closedReason = dayClosedReason(day)
+                const isOpen = closedReason === null
 
                 return (
                   <TableRow key={day.id}>
@@ -699,7 +700,7 @@ function TransportDaysPage() {
                               size="icon-sm"
                               className="rounded-full border-border text-accent-foreground"
                               disabled={!isOpen}
-                              title={isOpen ? 'Edit' : closedReason}
+                              title={closedReason ?? 'Edit'}
                               onClick={() => startEdit(day.id)}
                             >
                               <PencilLine className="size-3.5" />
@@ -712,7 +713,7 @@ function TransportDaysPage() {
                               size="icon-sm"
                               className="rounded-full"
                               disabled={!isOpen}
-                              title={isOpen ? 'Delete' : closedReason}
+                              title={closedReason ?? 'Delete'}
                               onClick={() => setDeletingDayId(day.id)}
                             >
                               <Trash2 className="size-3.5" />
