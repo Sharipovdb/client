@@ -10,17 +10,13 @@ import {
   PiggyBank,
   RefreshCw,
   Save,
-  Sparkles,
-  Trash2,
   Undo2,
   Wallet,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import { ConfirmDialog } from '@/components/confirm-dialog'
 import type { Period } from '@/components/month-picker'
 import { MonthPicker } from '@/components/month-picker'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -38,10 +34,7 @@ import { BusinessTripList } from '@/features/monthly-sheets/business-trip-list'
 import { businessTripsOf } from '@/features/monthly-sheets/business-trips'
 import { MonthGrid } from '@/features/monthly-sheets/month-grid'
 import { buildMonthlyReport } from '@/features/monthly-sheets/monthly-report'
-import {
-  useMonthlySheetPreview,
-  useMonthlySheets,
-} from '@/features/monthly-sheets/monthly-sheets-context'
+import { useMonthlySheets } from '@/features/monthly-sheets/monthly-sheets-context'
 import { PaySheetDialog } from '@/features/monthly-sheets/pay-sheet-dialog'
 import {
   isPayable,
@@ -58,7 +51,6 @@ import {
   formatPeriodRange,
   getMonthYear,
 } from '@/lib/format'
-import { useDebouncedValue } from '@/lib/use-debounced-value'
 
 export const Route = createFileRoute('/monthly-sheets')({
   component: MonthlySheetsPage,
@@ -116,15 +108,14 @@ function MonthlySheetsPage() {
   const {
     isLoading,
     getSheet,
-    generateSheet,
+    updateSheet,
     setOpeningBalance,
     confirmSheet,
     unconfirmSheet,
     markSheetPaid,
-    deleteSheet,
   } = useMonthlySheets()
   const printReport = useMonthlyReportPrinter()
-  const canPriceSheet = can('generateSheet')
+  const canPriceSheet = can('priceSheet')
 
   const [period, setPeriod] = useState<Period>(() =>
     getMonthYear(todayIsoDate()),
@@ -132,7 +123,6 @@ function MonthlySheetsPage() {
   const [crewId, setCrewId] = useState<number | null>(null)
   const [isBusy, setIsBusy] = useState(false)
   const [actionError, setActionError] = useState('')
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [payingSheet, setPayingSheet] = useState<MonthlySheet | null>(null)
 
   // The index belongs to one crew's month, so what is typed for August must not leak
@@ -172,60 +162,27 @@ function MonthlySheetsPage() {
       : rateAsText(sheet?.kmRate)
   const kmRate = rateAsNumber(kmRateText)
 
-  // Typing reprices the month server-side, so the request waits for the accountant to
-  // stop rather than firing on every digit.
-  const previewKmRate = useDebouncedValue(kmRate)
-
   const openingBalanceText =
     balanceDraft?.periodKey === periodKey
       ? balanceDraft.text
       : balanceAsText(sheet?.openingBalance)
   const openingBalance = balanceAsNumber(openingBalanceText)
-  const previewOpeningBalance = useDebouncedValue(openingBalance)
 
-  // A saved sheet already knows what it closed on; an unsaved one defaults to the whole
-  // month, which is what the accountant means unless they say otherwise.
+  // A sheet knows what it closes on; without one the box shows the whole month.
   const closingDate =
     closingDraft?.periodKey === periodKey
       ? closingDraft.date
       : (sheet?.periodEnd ?? lastDayOfMonth(period))
 
-  const previewClosingDate = useDebouncedValue(closingDate)
-
-  // A month without a saved sheet is still worth reading, so what generating would
-  // produce is loaded straight away rather than hidden behind a button. A saved sheet
-  // always wins: once the month exists, that is the record and there is nothing to
-  // preview.
-  const preview = useMonthlySheetPreview(
-    crew && !sheet && canPriceSheet
-      ? {
-          crewId: crew.id,
-          year: period.year,
-          month: period.month,
-          kmRate: previewKmRate,
-          openingBalance: previewOpeningBalance,
-          periodEnd: previewClosingDate,
-        }
-      : null,
-  )
-
-  const displayedSheet = sheet ?? preview.data ?? null
-
+  // The backend opens a crew's draft with the first day logged for the month, carrying
+  // the previous month's index, so there is nothing to generate: a month either has its
+  // sheet or has no travel yet.
   const report = useMemo(
-    () =>
-      displayedSheet
-        ? buildMonthlyReport(displayedSheet, getCrewName(displayedSheet.crewId))
-        : null,
-    [displayedSheet, getCrewName],
+    () => (sheet ? buildMonthlyReport(sheet, getCrewName(sheet.crewId)) : null),
+    [sheet, getCrewName],
   )
 
-  const businessTrips = displayedSheet
-    ? businessTripsOf(displayedSheet.days)
-    : []
-
-  // Generating a month the crew neither drove nor paid for is refused server-side, so
-  // the button only appears once there is something to save.
-  const hasSomethingToSave = (displayedSheet?.days.length ?? 0) > 0
+  const businessTrips = sheet ? businessTripsOf(sheet.days) : []
 
   // A draft follows the transport log on its own, but it keeps the index, balance and
   // closing date it was saved with until it is saved again, so a typed value that has
@@ -234,7 +191,7 @@ function MonthlySheetsPage() {
   const hasUnappliedRate =
     sheet !== undefined &&
     !sheet.isConfirmed &&
-    !displayedSheet?.isPricedByTariff &&
+    !sheet.isPricedByTariff &&
     kmRate !== sheet.kmRate
 
   const hasUnappliedBalance =
@@ -251,16 +208,17 @@ function MonthlySheetsPage() {
     hasUnappliedClosingDate && 'closing date',
   ].filter(Boolean)
 
-  const needsSaving = sheet === undefined || unappliedInputs.length > 0
+  const needsSaving = unappliedInputs.length > 0
 
-  const isPricingLocked = !canPriceSheet || (sheet?.isConfirmed ?? false)
+  // Everything is entered into the month's draft, which exists from its first logged
+  // day on; before that there is nothing to hold the values, and a confirmed month is
+  // frozen.
+  const isSheetLocked = sheet === undefined || sheet.isConfirmed
+  const isPricingLocked = !canPriceSheet || isSheetLocked
 
-  // A lead enters only the advance, and only into a draft the accountant has already
-  // generated: there is no month to hold it before that.
+  // A lead enters only the advance, as soon as the month's first day is logged.
   const entersBalanceOnly = !canPriceSheet && can('setOpeningBalance')
-  const isBalanceLocked = entersBalanceOnly
-    ? sheet === undefined || sheet.isConfirmed
-    : isPricingLocked
+  const isBalanceLocked = entersBalanceOnly ? isSheetLocked : isPricingLocked
 
   function selectCrew(nextCrewId: number) {
     setCrewId(nextCrewId)
@@ -302,19 +260,16 @@ function MonthlySheetsPage() {
     }
   }
 
-  const handleGenerate = () =>
+  const handleSave = () =>
     run(async () => {
-      if (!crew) return
+      if (!sheet) return
 
-      await generateSheet({
-        crewId: crew.id,
-        year: period.year,
-        month: period.month,
+      await updateSheet(sheet.id, {
         kmRate,
         openingBalance,
         periodEnd: closingDate,
       })
-    }, 'Could not generate the sheet.')
+    }, 'Could not save the sheet.')
 
   const handleSaveBalance = () =>
     run(async () => {
@@ -334,24 +289,10 @@ function MonthlySheetsPage() {
   const handlePay = (paidSheet: MonthlySheet) =>
     run(() => markSheetPaid(paidSheet.id), 'Could not mark this crew as paid.')
 
-  const handleDelete = () =>
-    run(async () => {
-      if (sheet) await deleteSheet(sheet.id)
-    }, 'Could not delete the sheet.')
-
   const handlePrint = () =>
     run(async () => {
-      if (displayedSheet) await printReport(displayedSheet)
+      if (sheet) await printReport(sheet)
     }, 'Could not build the PDF report.')
-
-  const errorMessage =
-    actionError ||
-    (preview.error
-      ? getErrorMessage(
-          preview.error,
-          'Could not compute this period for the crew.',
-        )
-      : '')
 
   return (
     <section className="space-y-6">
@@ -451,10 +392,10 @@ function MonthlySheetsPage() {
           </p>
         )}
 
-        {entersBalanceOnly && crew && !isLoading && !sheet && (
+        {crew && !isLoading && !sheet && (
           <p className="mt-4 text-sm text-faint-foreground">
-            The accountant has not generated this month yet — the opening
-            balance can be entered once they do.
+            Nothing is logged for this crew in this month yet — the sheet opens
+            with the first logged day.
           </p>
         )}
       </Card>
@@ -463,7 +404,7 @@ function MonthlySheetsPage() {
         <Card>
           <p className="py-10 text-center text-faint-foreground">No crews yet.</p>
         </Card>
-      ) : isLoading || preview.isLoading ? (
+      ) : isLoading ? (
         <Card>
           <p className="flex items-center justify-center gap-2 py-10 text-faint-foreground">
             <Loader2 className="size-4 animate-spin" /> Loading…
@@ -477,52 +418,40 @@ function MonthlySheetsPage() {
               <CardTitle className="mt-2 flex flex-wrap items-center gap-3">
                 {sheet ? (
                   <>
-                    Generated Sheet
+                    Monthly sheet
                     <SheetStatusBadge sheet={sheet} />
-                  </>
-                ) : displayedSheet ? (
-                  <>
-                    Not generated yet
-                    <Badge variant="secondary">Unsaved</Badge>
                   </>
                 ) : (
                   'No sheet yet'
                 )}
               </CardTitle>
-              {displayedSheet && (
+              {sheet && (
                 <CardDescription className="mt-2">
                   Paid to{' '}
                   <span className="font-medium text-soft-foreground">
-                    {displayedSheet.recipientFullname || 'the crew lead'}
+                    {sheet.recipientFullname || 'the crew lead'}
                   </span>
                   {' · '}
                   <span className="font-medium text-soft-foreground">
-                    {formatPeriodRange(
-                      displayedSheet.periodStart,
-                      displayedSheet.periodEnd,
-                    )}
+                    {formatPeriodRange(sheet.periodStart, sheet.periodEnd)}
                   </span>
                 </CardDescription>
               )}
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {/* A draft picks up newly logged days by itself, so a saved one only
-                  needs saving again when the accountant changed what they typed. */}
-              {needsSaving && hasSomethingToSave && can('generateSheet') && (
+              {/* A draft picks up newly logged days by itself, so it only needs saving
+                  when the accountant changed what they typed. */}
+              {sheet && needsSaving && can('priceSheet') && (
                 <Button
                   type="button"
                   size="sm"
                   className="rounded-full"
                   disabled={isBusy}
-                  onClick={handleGenerate}
+                  onClick={handleSave}
                 >
-                  {sheet ? (
-                    <Save className="size-3.5" />
-                  ) : (
-                    <Sparkles className="size-3.5" />
-                  )}
-                  {sheet ? 'Save' : 'Generate & Save'}
+                  <Save className="size-3.5" />
+                  Save
                 </Button>
               )}
 
@@ -585,7 +514,7 @@ function MonthlySheetsPage() {
                 </Button>
               )}
 
-              {displayedSheet && can('printSheet') && (
+              {sheet && can('printSheet') && (
                 <Button
                   type="button"
                   variant="outline"
@@ -598,32 +527,18 @@ function MonthlySheetsPage() {
                   Print PDF
                 </Button>
               )}
-
-              {sheet && !sheet.isConfirmed && can('deleteSheet') && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="rounded-full"
-                  disabled={isBusy}
-                  onClick={() => setConfirmingDelete(true)}
-                >
-                  <Trash2 className="size-3.5" />
-                  Delete
-                </Button>
-              )}
             </div>
           </CardHeader>
 
-          {errorMessage && (
+          {actionError && (
             <p className="mt-4 text-sm font-medium text-destructive">
-              {errorMessage}
+              {actionError}
             </p>
           )}
 
           {!report ? (
             <p className="py-10 text-center text-faint-foreground">
-              Nothing to show for this period yet.
+              No travel logged for this crew in this period yet.
             </p>
           ) : (
             <div className="mt-5 space-y-6">
@@ -736,14 +651,6 @@ function MonthlySheetsPage() {
           )}
         </Card>
       )}
-
-      <ConfirmDialog
-        open={confirmingDelete}
-        onOpenChange={setConfirmingDelete}
-        title="Delete this monthly sheet?"
-        description="This action cannot be undone. It can be generated again from the confirmed transport days."
-        onConfirm={handleDelete}
-      />
 
       <PaySheetDialog
         sheet={payingSheet}

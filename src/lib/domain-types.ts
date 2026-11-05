@@ -166,6 +166,9 @@ export interface TransportDay {
   // Every taxi leg carries its fare — recorded here, in the daily log, so a ride can
   // never end up without a reimbursable expense behind it.
   taxiFares: TaxiFare[]
+  // A confirmed monthly sheet covers the day, so the backend refuses to change it until
+  // the confirmation is withdrawn.
+  isSettled: boolean
 }
 
 // What the person logging the day knows about a taxi leg: what it cost and who paid.
@@ -181,8 +184,19 @@ export interface TaxiFare extends TaxiFareDraft {
   status: TaxiExpenseStatus
 }
 
+/** Why a day can no longer be changed, or `null` while it still can. */
+export function dayClosedReason(day: TransportDay) {
+  if (day.isSettled) {
+    return 'Its month is confirmed — withdraw the confirmation to change it'
+  }
+
+  return day.taxiFares.some((fare) => fare.status === 'Paid')
+    ? 'Its taxi fare has already been paid'
+    : null
+}
+
 export function isDayOpen(day: TransportDay) {
-  return day.taxiFares.every((fare) => fare.status !== 'Paid')
+  return dayClosedReason(day) === null
 }
 
 // --- Taxi expenses (mirrors Transportation.Domain.Entities.TaxiExpense) ---

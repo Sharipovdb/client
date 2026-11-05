@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isCrewLedBy, isDayOpen } from '@/lib/domain-types'
+import { dayClosedReason, isCrewLedBy, isDayOpen } from '@/lib/domain-types'
 import type { Crew, TaxiFare, TransportDay } from '@/lib/domain-types'
 
 function crew(leads: Pick<Crew, 'driverLeadId' | 'crewLeadId'>): Crew {
@@ -14,7 +14,7 @@ function crew(leads: Pick<Crew, 'driverLeadId' | 'crewLeadId'>): Crew {
   }
 }
 
-function dayWithFares(taxiFares: TaxiFare[]): TransportDay {
+function dayWithFares(taxiFares: TaxiFare[], isSettled = false): TransportDay {
   return {
     id: 1,
     crewId: 1,
@@ -29,6 +29,7 @@ function dayWithFares(taxiFares: TaxiFare[]): TransportDay {
     loggedBy: 1,
     loggedAt: '2026-10-05T08:00:00.000Z',
     taxiFares,
+    isSettled,
   }
 }
 
@@ -63,5 +64,27 @@ describe('isDayOpen', () => {
 
   it('closes a day once one of its fares is paid', () => {
     expect(isDayOpen(dayWithFares([fare('Pending'), fare('Paid')]))).toBe(false)
+  })
+
+  it('closes a day its confirmed month covers', () => {
+    expect(isDayOpen(dayWithFares([fare('Pending')], true))).toBe(false)
+  })
+})
+
+describe('dayClosedReason', () => {
+  it('has nothing to say about an open day', () => {
+    expect(dayClosedReason(dayWithFares([]))).toBeNull()
+  })
+
+  it('names the confirmed month first', () => {
+    expect(dayClosedReason(dayWithFares([fare('Paid')], true))).toBe(
+      'Its month is confirmed — withdraw the confirmation to change it',
+    )
+  })
+
+  it('names the paid taxi fare', () => {
+    expect(dayClosedReason(dayWithFares([fare('Paid')]))).toBe(
+      'Its taxi fare has already been paid',
+    )
   })
 })
