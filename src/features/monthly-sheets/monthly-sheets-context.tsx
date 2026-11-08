@@ -47,7 +47,9 @@ interface MonthlySheetApiDto {
   totalDrivingAmount: number
   totalPayable: number
   totalPayout: number
-  carriedBalance: number
+  // Missing from a backend older than the balance carried between months; such a
+  // backend carries nothing over, so the page reads it as 0 rather than crash.
+  carriedBalance?: number
   balance: number | null
 }
 
@@ -61,6 +63,7 @@ export const MONTHLY_SHEETS_QUERY_KEY = ['monthly-sheets']
 function toMonthlySheet(dto: MonthlySheetApiDto): MonthlySheet {
   return {
     ...dto,
+    carriedBalance: dto.carriedBalance ?? 0,
     periodStart: dto.periodStart.slice(0, 10),
     periodEnd: dto.periodEnd.slice(0, 10),
     days: dto.days.map((day) => ({ ...day, date: day.date.slice(0, 10) })),
