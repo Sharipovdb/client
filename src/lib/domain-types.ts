@@ -239,8 +239,9 @@ export interface MonthlySheetDay {
   extraBusinessKm: number
   notes: string // where the business kilometres were driven
   taxiAmount: number
-  // What is left of the opening balance once this day's trips and fares are taken off
-  // it. `null` when the lead is settled at the end of the month instead.
+  // The crew's balance once this day's trips and fares are taken off it, starting from
+  // what earlier months carried over plus this month's top-up. `null` when the month is
+  // settled at its end instead.
   balance: number | null
 }
 
@@ -264,8 +265,10 @@ export interface MonthlySheet {
   // TJS per kilometre — the accountant's index, entered on the Monthly Sheets page and
   // saved with the sheet, so what was paid stays readable afterwards.
   kmRate: number
-  // The money handed to the lead in advance, entered next to the index. `null` means
-  // the month is settled in arrears, exactly as before advances existed.
+  // The top-up of the crew's balance for the month, entered next to the index. `null`
+  // means the month is settled in arrears: its trips and fares are paid at the end of
+  // the month and the balance passes through untouched. 0 keeps the month on balance
+  // without a top-up, spending what earlier months carried over.
   openingBalance: number | null
   // The month's allowance for the lead's own car, frozen from the vehicle's
   // amortization basis when the sheet was built. 0 for a manager-led crew.
@@ -287,11 +290,16 @@ export interface MonthlySheet {
   totalTariffAmount: number
   // What the crew's own driving is worth, whichever way it was priced.
   totalDrivingAmount: number
-  // With an opening balance, only the overspend and the car allowance are left to pay.
+  // Paid at the end of the month: the car allowance, plus every trip and fare when the
+  // month is settled in arrears. An overspent balance is never paid; it carries over.
   totalPayable: number
-  // What the crew costs the month: `totalPayable` plus the opening balance handed out at
-  // its start. This, not `totalPayable`, is what Payouts adds up across crews.
+  // What the crew costs the month: `totalPayable` plus the top-up handed out at its
+  // start. This, not `totalPayable`, is what Payouts adds up across crews.
   totalPayout: number
-  // The opening balance less the month's trips and fares; negative once overspent.
+  // What the crew's earlier months left over, negative when they overspent. Computed
+  // server-side from those months, so correcting one shows here at once.
+  carriedBalance: number
+  // `carriedBalance` plus the top-up less the month's trips and fares, carried into the
+  // next month with its sign. `null` when the month is settled in arrears.
   balance: number | null
 }

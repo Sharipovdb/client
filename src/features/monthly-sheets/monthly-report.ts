@@ -23,7 +23,7 @@ export interface ReportDay {
   drivenKm: number
   extraBusinessKm: number
   taxiAmount: number
-  /** What is left of the opening balance after this day; `null` without one. */
+  /** The crew's balance after this day; `null` in a month settled in arrears. */
   balance: number | null
 }
 
@@ -57,11 +57,13 @@ export interface MonthlyReport {
   /** What the crew's own driving is worth, whichever way it was priced. */
   totalDrivingAmount: number
   amortizationAmount: number
-  /** Kilometres, fares and the car allowance as the one amount the lead is handed. */
+  /** What the lead is handed at the end of the month, as one amount. */
   totalPayable: number
-  /** Money the lead was handed in advance; `null` when the month is settled in arrears. */
+  /** The month's top-up of the balance; `null` when the month is settled in arrears. */
   openingBalance: number | null
-  /** The opening balance less the month's trips and fares. Negative once overspent. */
+  /** What earlier months left over, negative when they overspent. */
+  carriedBalance: number
+  /** Carried over plus the top-up less the month's trips and fares. */
   balance: number | null
 }
 
@@ -174,6 +176,7 @@ export function buildMonthlyReport(
     amortizationAmount: sheet.amortizationAmount,
     totalPayable: sheet.totalPayable,
     openingBalance: sheet.openingBalance,
+    carriedBalance: sheet.carriedBalance,
     balance: sheet.balance,
   }
 }

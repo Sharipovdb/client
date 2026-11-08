@@ -12,8 +12,8 @@ const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
  * A crew on a tariff earns by the leg, so its cells count legs; every other crew is
  * priced by distance and shows kilometres.
  *
- * A lead paid in advance also sees, under each travelled day, what is left of the
- * opening balance once that day is taken off it.
+ * A month on balance also shows, under each travelled day, the crew's balance once that
+ * day is taken off it.
  *
  * The grid spans the period actually settled, which can run from one month into the next,
  * so the 1st of a month is labelled with its name to keep the day numbers unambiguous.

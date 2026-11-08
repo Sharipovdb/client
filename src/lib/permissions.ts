@@ -106,7 +106,7 @@ export type Capability =
   | 'confirmSheet' // signs the month off, and withdraws that signature while unpaid
   | 'paySheet' // release a crew's month to its lead; a lead confirms but never pays
   | 'printSheet'
-  // The advance a lead was handed. Unlike the rest of the sheet a lead may enter it
+  // The balance top-up a lead was handed. Unlike the rest of the sheet a lead may enter it
   // themselves, but only on a draft the accountant already generated — the backend's
   // SetOpeningBalance changes nothing else, and confirming still checks it.
   | 'setOpeningBalance'

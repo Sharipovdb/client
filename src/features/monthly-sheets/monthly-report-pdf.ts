@@ -252,11 +252,12 @@ function summaryLines(report: MonthlyReport): [string, string][] {
     formatCurrency(report.totalTaxiAmount),
   ])
 
-  // A lead paid in advance has the trips and fares taken off what they were handed, so
-  // only an overspend is still owed to them.
+  // A month on balance has its trips and fares taken off what earlier months carried
+  // over plus its top-up; whatever is left, or overspent, carries into the next month.
   if (report.openingBalance !== null && report.balance !== null) {
-    lines.push(['Opening balance', formatCurrency(report.openingBalance)])
-    lines.push(['Balance left', formatCurrency(report.balance)])
+    lines.push(['Carried over', formatCurrency(report.carriedBalance)])
+    lines.push(['Balance top-up', formatCurrency(report.openingBalance)])
+    lines.push(['Balance to carry over', formatCurrency(report.balance)])
   }
 
   return lines
