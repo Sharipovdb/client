@@ -47,6 +47,7 @@ interface MonthlySheetApiDto {
   totalDrivingAmount: number
   totalPayable: number
   totalPayout: number
+  carriedBalance: number
   balance: number | null
 }
 
@@ -167,7 +168,7 @@ export function MonthlySheetsProvider({ children }: { children: ReactNode }) {
     onSuccess: invalidate,
   })
 
-  // A lead enters their advance on a draft without repricing it: the index and the
+  // A lead enters their top-up on a draft without repricing it: the index and the
   // closing date stay exactly as the accountant saved them.
   const openingBalanceMutation = useMutation({
     mutationFn: ({

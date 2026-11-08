@@ -75,7 +75,7 @@ function rateAsNumber(text: string) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
 }
 
-/** A saved opening balance as text for the box; a month settled in arrears is empty. */
+/** A saved top-up as text for the box; a month settled in arrears is empty. */
 function balanceAsText(openingBalance: number | null | undefined) {
   return openingBalance === null || openingBalance === undefined
     ? ''
@@ -83,8 +83,8 @@ function balanceAsText(openingBalance: number | null | undefined) {
 }
 
 /**
- * What the box means in TJS. An empty box is no advance at all, which is not the same as
- * an advance of zero: only an advance makes the days come off a balance.
+ * What the box means in TJS. An empty box settles the month in arrears, which is not the
+ * same as a top-up of zero: any top-up, zero included, makes the days come off a balance.
  */
 function balanceAsNumber(text: string) {
   if (text.trim() === '') return null
@@ -134,7 +134,7 @@ function MonthlySheetsPage() {
     text: string
   } | null>(null)
 
-  // The advance handed to the lead belongs to one crew's month just like the index.
+  // The top-up handed to the lead belongs to one crew's month just like the index.
   const [balanceDraft, setBalanceDraft] = useState<{
     periodKey: string
     text: string
@@ -204,7 +204,7 @@ function MonthlySheetsPage() {
 
   const unappliedInputs = [
     hasUnappliedRate && 'index',
-    hasUnappliedBalance && 'opening balance',
+    hasUnappliedBalance && 'balance top-up',
     hasUnappliedClosingDate && 'closing date',
   ].filter(Boolean)
 
@@ -216,7 +216,7 @@ function MonthlySheetsPage() {
   const isSheetLocked = sheet === undefined || sheet.isConfirmed
   const isPricingLocked = !canPriceSheet || isSheetLocked
 
-  // A lead enters only the advance, as soon as the month's first day is logged.
+  // A lead enters only the top-up, as soon as the month's first day is logged.
   const entersBalanceOnly = !canPriceSheet && can('setOpeningBalance')
   const isBalanceLocked = entersBalanceOnly ? isSheetLocked : isPricingLocked
 
@@ -274,7 +274,7 @@ function MonthlySheetsPage() {
   const handleSaveBalance = () =>
     run(async () => {
       if (sheet) await setOpeningBalance(sheet.id, openingBalance)
-    }, 'Could not save the opening balance.')
+    }, 'Could not save the balance top-up.')
 
   const handleConfirm = () =>
     run(async () => {
@@ -341,14 +341,15 @@ function MonthlySheetsPage() {
                 onChange={(event) => editRate(event.target.value)}
               />
             </div>
-            {/* Some leads are handed the month's money up front. Leaving this empty
-                settles the month in arrears, as before. */}
+            {/* A crew on balance is topped up at the start of the month and its trips
+                and fares come off the balance. Leaving this empty settles the month in
+                arrears instead; 0 keeps it on balance without a top-up. */}
             <div className="w-[calc(50%-0.375rem)] sm:w-44">
               <label
                 className="text-sm font-medium text-soft-foreground"
                 htmlFor="opening-balance"
               >
-                Opening balance (TJS)
+                Balance top-up (TJS)
               </label>
               <Input
                 id="opening-balance"
@@ -357,7 +358,8 @@ function MonthlySheetsPage() {
                 min={0}
                 step="0.01"
                 inputMode="decimal"
-                placeholder="Paid at month end"
+                placeholder="None, paid at month end"
+                title="Leave empty to pay the trips and fares at the end of the month. Enter 0 to spend the carried balance without a top-up."
                 value={openingBalanceText}
                 disabled={isBalanceLocked}
                 onChange={(event) => editBalance(event.target.value)}
@@ -548,21 +550,28 @@ function MonthlySheetsPage() {
                   value={report.travelledDayCount}
                   icon={CalendarCheck}
                 />
-                {/* A lead paid in advance sees first what is left of it; the legs and
-                    kilometres stay readable in the pricing card's hint. Otherwise the
-                    crew is shown in the unit it is paid in and no other: a tariffed
-                    crew's kilometres price nothing, and showing them alongside the money
-                    only invites them to be added together. */}
+                {/* A month settled in arrears leaves the balance untouched, but whatever
+                    earlier months left over or overspent is still the crew's, so it stays
+                    in sight until a top-up, even 0, puts the month back on balance. */}
+                {report.balance === null && report.carriedBalance !== 0 && (
+                  <StatCard
+                    label="Carried balance"
+                    value={formatCurrency(report.carriedBalance)}
+                    icon={PiggyBank}
+                    hint="Untouched this month"
+                  />
+                )}
+                {/* A crew on balance sees first what it will carry into the next month;
+                    the legs and kilometres stay readable in the pricing card's hint.
+                    Otherwise the crew is shown in the unit it is paid in and no other: a
+                    tariffed crew's kilometres price nothing, and showing them alongside
+                    the money only invites them to be added together. */}
                 {report.openingBalance !== null && report.balance !== null ? (
                   <StatCard
                     label="Balance"
                     value={formatCurrency(report.balance)}
                     icon={PiggyBank}
-                    hint={
-                      report.balance < 0
-                        ? `Overspent ${formatCurrency(-report.balance)} of ${formatCurrency(report.openingBalance)}`
-                        : `Left of ${formatCurrency(report.openingBalance)}`
-                    }
+                    hint={`${formatCurrency(report.carriedBalance)} carried + ${formatCurrency(report.openingBalance)} top-up`}
                   />
                 ) : report.isPricedByTariff ? (
                   <StatCard
@@ -629,7 +638,7 @@ function MonthlySheetsPage() {
                   icon={BadgeCheck}
                   hint={
                     report.openingBalance !== null
-                      ? 'Overspend and car allowance'
+                      ? 'Car allowance, the balance carries over'
                       : undefined
                   }
                 />

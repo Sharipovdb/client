@@ -173,7 +173,7 @@ function PayoutsPage() {
                     {formatCurrency(sheet.totalPayout)}
                     {sheet.openingBalance !== null && (
                       <span className="block text-xs font-normal text-muted-foreground">
-                        incl. advance {formatCurrency(sheet.openingBalance)}
+                        incl. top-up {formatCurrency(sheet.openingBalance)}
                       </span>
                     )}
                   </TableCell>

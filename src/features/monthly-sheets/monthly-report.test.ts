@@ -78,6 +78,7 @@ function aSheet(overrides: Partial<MonthlySheet> = {}): MonthlySheet {
     totalDrivingAmount,
     totalPayable: totalDrivingAmount + totalTaxiAmount + amortizationAmount,
     totalPayout: totalDrivingAmount + totalTaxiAmount + amortizationAmount,
+    carriedBalance: 0,
     balance: null,
     ...overrides,
     days,
@@ -398,16 +399,22 @@ describe('buildMonthlyReport', () => {
     })
   })
 
-  it('carries the opening balance and what is left of it after the month', () => {
+  it('carries the top-up, what earlier months left and the balance after the month', () => {
     const report = buildMonthlyReport(
-      aSheet({ openingBalance: 100, balance: -15, totalPayable: 15 }),
+      aSheet({
+        openingBalance: 100,
+        carriedBalance: -20,
+        balance: -35,
+        totalPayable: 0,
+      }),
       'Crew A',
     )
 
     expect(report).toMatchObject({
       openingBalance: 100,
-      balance: -15,
-      totalPayable: 15,
+      carriedBalance: -20,
+      balance: -35,
+      totalPayable: 0,
     })
   })
 
