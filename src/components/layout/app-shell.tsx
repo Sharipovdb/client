@@ -14,6 +14,7 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { getNavigationItemsForRole, getPageTitle } from '@/app/navigation'
+import { BrandLogo } from '@/components/layout/brand-logo'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -81,8 +82,15 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen bg-(image:--app-backdrop) text-foreground">
       <header className="sticky top-0 z-30 border-b border-border/80 bg-card/96 backdrop-blur-xl">
-        <div className="flex min-h-20 items-center justify-between gap-2 px-3 py-2 sm:min-h-26 sm:gap-4 sm:px-6 sm:py-4 lg:px-10">
-          <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex min-h-20 items-center justify-between gap-2 px-3 py-2 sm:min-h-26 sm:gap-4 sm:px-6 sm:py-4 lg:gap-0 lg:pr-10 lg:pl-0">
+          {/* On desktop this block is as wide as the sidebar, so the divider
+              after it continues the sidebar's edge. */}
+          <div
+            className={cn(
+              'flex items-center gap-2 sm:gap-4 lg:shrink-0 lg:justify-center',
+              sidebarWidthClassName,
+            )}
+          >
             <Button
               variant="outline"
               size="icon"
@@ -93,7 +101,15 @@ export function AppShell({ children }: AppShellProps) {
               <Menu className="size-4" />
             </Button>
 
-            <BrandLogo collapsed={sidebarCollapsed} />
+            <BrandLogo
+              className={cn(
+                'h-6 sm:h-10 lg:h-12',
+                sidebarCollapsed && 'lg:hidden',
+              )}
+            />
+            {sidebarCollapsed && (
+              <BrandLogo markOnly className="hidden h-10 lg:block" />
+            )}
           </div>
 
           <div className="flex min-w-0 flex-1 items-center justify-between gap-2 sm:gap-4 sm:border-l sm:border-border sm:pl-6 lg:pl-10">
@@ -297,18 +313,5 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </div>
     </div>
-  )
-}
-
-function BrandLogo({ collapsed }: { collapsed: boolean }) {
-  return (
-    <img
-      src="/logosrp.png"
-      alt="SRP Transportation"
-      className={cn(
-        'h-10 w-auto shrink-0 object-contain sm:h-16 lg:h-20',
-        collapsed && 'lg:h-16',
-      )}
-    />
   )
 }
