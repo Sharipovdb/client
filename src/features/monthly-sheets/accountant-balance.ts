@@ -6,16 +6,24 @@ import { apiClient } from '@/lib/api-client'
 
 /**
  * The money the accountant received for a month and what the crews have cost of it.
- * The backend adds up every sheet's `totalPayout`, advances included, so the remainder
- * is never recomputed here.
+ * The backend adds up every sheet's `totalPayout`, top-ups included, and carries what
+ * every earlier month left over, so the remainder is never recomputed here.
  */
 export interface AccountantBalance {
   year: number
   month: number
-  /** `null` until the accountant has entered what they received. */
+  /** `null` until the accountant has entered what they received; it counts as 0. */
   amount: number | null
+  /**
+   * What earlier months left over, negative when they cost more than was received.
+   * Missing from a backend older than the carried balance, which carries nothing.
+   */
+  carriedAmount?: number
   spentAmount: number
-  /** Negative once the crews cost more than was received; `null` without an amount. */
+  /**
+   * Carried over plus received less spent, carried into the next month with its sign.
+   * A backend older than the carried balance answers `null` without an amount.
+   */
   remainingAmount: number | null
 }
 
@@ -23,8 +31,9 @@ export interface AccountantBalanceEntry extends Period {
   amount: number
 }
 
-// Keyed under the sheets so generating, confirming, paying or deleting a sheet — or a
-// lead entering their advance — refreshes what is left with everything else.
+// Keyed under the sheets so confirming or paying a sheet — or a lead entering their
+// top-up — refreshes what is left with everything else. Every month is keyed apart, but
+// a later month carries this one, so saving an amount refreshes all of them.
 function accountantBalanceKey({ year, month }: Period) {
   return [...MONTHLY_SHEETS_QUERY_KEY, 'accountant-balance', year, month]
 }
@@ -51,7 +60,9 @@ export function useSetAccountantBalance() {
   return useMutation({
     mutationFn: (entry: AccountantBalanceEntry) =>
       apiClient.put('/api/AccountantBalance/Set', entry),
-    onSuccess: (_, entry) =>
-      queryClient.invalidateQueries({ queryKey: accountantBalanceKey(entry) }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: [...MONTHLY_SHEETS_QUERY_KEY, 'accountant-balance'],
+      }),
   })
 }

@@ -51,9 +51,10 @@ function Figure({ label, value, tone = 'default' }: FigureProps) {
 }
 
 /**
- * The money the accountant received for the month, and what is left of it once every
- * crew's payout — the advances handed out at the start of the month included — is taken
- * off. Mount it with a key per period so the box starts from that month's saved amount.
+ * The money the accountant received for the month on top of what earlier months left
+ * over, and what is left of it once every crew's payout — the top-ups handed out at the
+ * start of the month included — is taken off. What is left carries into the next month.
+ * Mount it with a key per period so the box starts from that month's saved amount.
  */
 export function AccountantBalanceCard({ period }: { period: Period }) {
   const { can } = usePermissions()
@@ -68,6 +69,7 @@ export function AccountantBalanceCard({ period }: { period: Period }) {
   const amount = amountAsNumber(amountText)
   const canEdit = can('setAccountantBalance')
   const isUnchanged = amount === (balance?.amount ?? null)
+  const carried = balance?.carriedAmount ?? 0
   const remaining = balance?.remainingAmount ?? null
 
   async function handleSave(event: FormEvent) {
@@ -132,7 +134,12 @@ export function AccountantBalanceCard({ period }: { period: Period }) {
           </form>
         )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:min-w-[520px]">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:min-w-[640px]">
+          <Figure
+            label="Carried over"
+            value={formatCurrency(carried)}
+            tone={carried < 0 ? 'negative' : 'default'}
+          />
           <Figure
             label="Received"
             value={
